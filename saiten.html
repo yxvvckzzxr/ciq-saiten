@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,7 +9,12 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: sans-serif;
       background: #1a1a2e;
@@ -16,7 +22,12 @@
       min-height: 100vh;
       padding: 20px;
     }
-    h1 { font-size: 20px; margin-bottom: 16px; }
+
+    h1 {
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
     .top-bar {
       display: flex;
       align-items: center;
@@ -24,6 +35,7 @@
       margin-bottom: 20px;
       flex-wrap: wrap;
     }
+
     .btn {
       padding: 10px 20px;
       border-radius: 8px;
@@ -34,38 +46,69 @@
       cursor: pointer;
       white-space: nowrap;
     }
-    .btn:hover { background: #388e3c; }
+
+    .btn:hover {
+      background: #388e3c;
+    }
+
     .btn.secondary {
       background: #0f3460;
       border: 1px solid #444;
     }
-    .btn.secondary:hover { background: #1a4a7a; }
-    .btn.danger { background: #b71c1c; }
-    .btn.danger:hover { background: #7f0000; }
+
+    .btn.secondary:hover {
+      background: #1a4a7a;
+    }
+
+    .btn.danger {
+      background: #b71c1c;
+    }
+
+    .btn.danger:hover {
+      background: #7f0000;
+    }
+
     .main {
       display: flex;
       gap: 20px;
       align-items: flex-start;
     }
+
     .canvas-container {
       position: relative;
       flex: 1;
       overflow: auto;
     }
-    #pdf-canvas { display: block; cursor: crosshair; }
+
+    #pdf-canvas {
+      display: block;
+      cursor: crosshair;
+    }
+
     #overlay {
       position: absolute;
       top: 0;
       left: 0;
     }
-    .sidebar { width: 280px; flex-shrink: 0; }
+
+    .sidebar {
+      width: 280px;
+      flex-shrink: 0;
+    }
+
     .sidebar-section {
       background: #16213e;
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 16px;
     }
-    .sidebar-section h3 { font-size: 14px; color: #aaa; margin-bottom: 12px; }
+
+    .sidebar-section h3 {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 12px;
+    }
+
     .mode-btn {
       display: block;
       width: 100%;
@@ -79,15 +122,30 @@
       margin-bottom: 8px;
       text-align: left;
     }
-    .mode-btn.active { border-color: #4caf50; color: white; background: #1b5e20; }
-    .status { font-size: 13px; color: #aaa; margin-top: 8px; }
-    .status span { color: #4caf50; }
+
+    .mode-btn.active {
+      border-color: #4caf50;
+      color: white;
+      background: #1b5e20;
+    }
+
+    .status {
+      font-size: 13px;
+      color: #aaa;
+      margin-top: 8px;
+    }
+
+    .status span {
+      color: #4caf50;
+    }
+
     .progress-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 4px;
       margin-top: 8px;
     }
+
     .progress-cell {
       width: 100%;
       aspect-ratio: 1;
@@ -99,9 +157,14 @@
       font-size: 9px;
       color: #aaa;
     }
-    .progress-cell.done { background: #1b5e20; color: white; }
+
+    .progress-cell.done {
+      background: #1b5e20;
+      color: white;
+    }
   </style>
 </head>
+
 <body>
   <h1>CIQ the 13th 採点システム - 座標設定</h1>
 
@@ -401,4 +464,5 @@
     }
   </script>
 </body>
+
 </html>
