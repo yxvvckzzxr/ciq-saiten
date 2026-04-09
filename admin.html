@@ -137,13 +137,6 @@
             color: white;
         }
 
-        .btn-group {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 16px;
-        }
-
         .csv-status {
             font-size: 13px;
             color: #aaa;
@@ -164,15 +157,6 @@
     <div class="top-bar">
         <button class="btn secondary" onclick="location.href='judge.html'">← 一覧へ</button>
         <h1>管理者画面</h1>
-    </div>
-
-    <div class="section">
-        <h2>操作</h2>
-        <div class="btn-group">
-            <button class="btn secondary" onclick="location.href='scoring.html'">答案読み込み</button>
-            <button class="btn secondary" onclick="location.href='answer_setup.html'">模範解答設定</button>
-            <button class="btn secondary" onclick="location.href='conflict.html'">要確認一覧</button>
-        </div>
     </div>
 
     <div class="section">
@@ -222,7 +206,6 @@
 
         const scorerRole = sessionStorage.getItem('scorer_role');
         if (scorerRole !== 'admin') {
-            alert('管理者のみアクセスできます');
             location.href = 'judge.html';
         }
 
@@ -243,7 +226,6 @@
             if (answersSnap.exists()) {
                 entryNumbers = Object.keys(answersSnap.val()).map(Number).sort((a, b) => a - b);
             }
-
             db.ref('scores').on('value', snap => {
                 scoresData = snap.val() || {};
                 updateView();
@@ -259,7 +241,6 @@
             for (let q = 1; q <= 100; q++) {
                 const completedScorers = Object.keys(scoresData[`__completed__q${q}`] || {});
                 const allDone = completedScorers.length >= 3;
-
                 let hasConflict = false;
                 let allResolved = true;
 
@@ -343,8 +324,6 @@
                 }
 
                 const score = answers.reduce((a, b) => a + b, 0);
-
-                // 連答計算
                 const streaks = [];
                 let current = 0;
                 answers.forEach(a => {
@@ -369,7 +348,6 @@
                 };
             });
 
-            // 順位計算
             results.sort((a, b) => {
                 if (b.score !== a.score) return b.score - a.score;
                 for (let i = 0; i < 100; i++) {

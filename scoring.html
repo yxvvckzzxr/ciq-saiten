@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CIQ the 13th 採点システム - 採点</title>
+    <title>CIQ the 13th 採点システム - 答案設定</title>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -23,27 +23,20 @@
             padding: 20px;
         }
 
+        .top-bar {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
         h1 {
             font-size: 20px;
-            margin-bottom: 16px;
-        }
-
-        .section {
-            background: #16213e;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            max-width: 800px;
-        }
-
-        .section h2 {
-            font-size: 16px;
-            margin-bottom: 12px;
-            color: #aaa;
         }
 
         .btn {
-            padding: 10px 20px;
+            padding: 8px 16px;
             border-radius: 8px;
             border: none;
             background: #4caf50;
@@ -64,6 +57,24 @@
         .btn.secondary {
             background: #0f3460;
             border: 1px solid #444;
+        }
+
+        .btn.secondary:hover {
+            background: #1a4a7a;
+        }
+
+        .section {
+            background: #16213e;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            max-width: 800px;
+        }
+
+        .section h2 {
+            font-size: 15px;
+            color: #aaa;
+            margin-bottom: 12px;
         }
 
         .progress-bar-container {
@@ -109,6 +120,7 @@
             object-fit: cover;
             border-radius: 4px;
             border: 1px solid #444;
+            background: white;
         }
 
         .badge {
@@ -125,10 +137,6 @@
             background: #b71c1c;
         }
 
-        .badge.pending {
-            background: #444;
-        }
-
         input[type="file"] {
             color: white;
             margin-right: 12px;
@@ -137,7 +145,10 @@
 </head>
 
 <body>
-    <h1>CIQ the 13th 採点システム - 答案読み込み</h1>
+    <div class="top-bar">
+        <button class="btn secondary" onclick="location.href='judge.html'">← 一覧へ</button>
+        <h1>答案設定</h1>
+    </div>
 
     <div class="section">
         <h2>STEP 1: 答案PDFをアップロード</h2>
@@ -155,7 +166,7 @@
         <div class="answer-list" id="answer-list"></div>
         <br>
         <button class="btn" id="save-btn" onclick="saveToFirebase()" disabled>
-            Firebaseに保存して採点へ
+            Firebaseに保存
         </button>
     </div>
 
@@ -175,6 +186,11 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        const scorerRole = sessionStorage.getItem('scorer_role');
+        if (scorerRole !== 'admin') {
+            location.href = 'judge.html';
+        }
+
         pdfjsLib.GlobalWorkerOptions.workerSrc =
             'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
@@ -182,15 +198,17 @@
         const workCtx = workCanvas.getContext('2d');
 
         let config = null;
-        let answers = []; // [{page, entryNumber, cells: [{q, imageData}]}]
+        let answers = [];
 
         async function loadAnswers() {
             const file = document.getElementById('pdf-file').files[0];
             if (!file) { alert('PDFを選択してください'); return; }
 
-            // Firebaseからconfig読み込み
             const snap = await db.ref('config').get();
-            if (!snap.exists()) { alert('座標設定が見つかりません。saiten.htmlで設定してください'); return; }
+            if (!snap.exists()) {
+                alert('座標設定が見つかりません。座標設定ページで設定してください');
+                return;
+            }
             config = snap.val();
 
             const arrayBuffer = await file.arrayBuffer();
@@ -214,14 +232,7 @@
                 workCanvas.height = viewport.height;
                 await page.render({ canvasContext: workCtx, viewport }).promise;
 
-                // トンボで補正（簡易版：スケール比率のみ）
-                const scaleX = viewport.width / (config.tombo[1].x - config.tombo[0].x + config.tombo[1].x);
-                const scaleY = viewport.height / (config.tombo[2].y - config.tombo[0].y + config.tombo[2].y);
-
-                // 受付番号読み取り
                 const entryNumber = readEntryNumber(config.markCells);
-
-                // 100問の解答欄を切り出し
                 const cells = [];
                 for (let q = 0; q < 100; q++) {
                     const r = config.answerRegions[q];
@@ -241,19 +252,15 @@
         }
 
         function readEntryNumber(markCells) {
-            // 各行で最も暗いセルのcolを読み取る
-            const rows = [[], [], []]; // 100の位、10の位、1の位
+            const rows = [[], [], []];
             markCells.forEach(cell => {
                 const darkness = getMeanDarkness(cell);
                 rows[cell.row].push({ col: cell.col, darkness });
             });
-
             const digits = rows.map(row => {
                 const sorted = [...row].sort((a, b) => b.darkness - a.darkness);
-                return sorted[0].col; // 最も暗いセル＝塗られたマーク
+                return sorted[0].col;
             });
-
-            // 100の位・10の位・1の位
             return digits[0] * 100 + digits[1] * 10 + digits[2];
         }
 
@@ -267,7 +274,7 @@
                 const r = imageData.data[i];
                 const g = imageData.data[i + 1];
                 const b = imageData.data[i + 2];
-                total += (255 - (r + g + b) / 3); // 暗さ（255=完全に黒）
+                total += (255 - (r + g + b) / 3);
             }
             return total / (imageData.data.length / 4);
         }
@@ -335,8 +342,8 @@
             }
 
             await db.ref('/').update(batch);
-            document.getElementById('status-text').textContent = '保存完了！採点画面へ進んでください';
-            alert('保存完了しました。採点画面へ進んでください。');
+            document.getElementById('status-text').textContent = '保存完了しました';
+            document.getElementById('save-btn').disabled = false;
         }
     </script>
 </body>

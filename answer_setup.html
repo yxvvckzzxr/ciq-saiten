@@ -110,23 +110,22 @@
         }
 
         .answer-item .answer-text {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: bold;
             color: white;
             word-break: break-all;
-            min-height: 20px;
+            min-height: 18px;
+        }
+
+        .answer-item .answer-text.unset {
+            color: #555;
+            font-weight: normal;
         }
 
         .status-msg {
             margin-top: 12px;
             font-size: 13px;
             color: #4caf50;
-        }
-
-        .error-msg {
-            margin-top: 12px;
-            font-size: 13px;
-            color: #ef5350;
         }
     </style>
 </head>
@@ -140,21 +139,14 @@
     <div class="section">
         <h2>CSVファイルから読み込む</h2>
         <div class="csv-hint">
-            CSVファイルの形式：1行目はヘッダー不要、1列目に問題番号、2列目に模範解答<br>
-            例：<code>1,東京</code> / <code>2,織田信長</code><br>
-            または1列のみ（1行目が1問目、2行目が2問目…）でも可
+            形式1（問題番号あり）：<code>1,東京</code> / <code>2,織田信長</code><br>
+            形式2（問題番号なし）：1行目が1問目、2行目が2問目…
         </div>
         <input type="file" id="csv-file" accept=".csv" />
         <button class="btn" onclick="loadCSV()">読み込む</button>
-        <div id="status-msg"></div>
+        <button class="btn" style="margin-left:8px" onclick="saveAnswers()">Firebaseに保存</button>
+        <div id="status-msg" class="status-msg"></div>
         <div class="answer-grid" id="answer-grid"></div>
-    </div>
-
-    <div class="section">
-        <h2>現在の設定</h2>
-        <button class="btn secondary" onclick="loadCurrent()">Firebaseから読み込む</button>
-        <button class="btn" style="margin-left:8px" onclick="saveCurrent()">Firebaseに保存</button>
-        <div class="answer-grid" id="current-grid"></div>
     </div>
 
     <script>
@@ -173,7 +165,6 @@
 
         const scorerRole = sessionStorage.getItem('scorer_role');
         if (scorerRole !== 'admin') {
-            alert('管理者のみアクセスできます');
             location.href = 'judge.html';
         }
 
@@ -191,62 +182,56 @@
 
                 lines.forEach((line, idx) => {
                     const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-                    if (cols.length >= 2) {
-                        // 1列目が問題番号、2列目が解答
+                    if (cols.length >= 2 && !isNaN(parseInt(cols[0]))) {
                         const qNum = parseInt(cols[0]);
                         if (qNum >= 1 && qNum <= 100) {
                             answers[qNum - 1] = cols[1];
                         }
-                    } else if (cols.length === 1 && idx < 100) {
-                        // 1列のみの場合は行順で対応
+                    } else if (idx < 100) {
                         answers[idx] = cols[0];
                     }
                 });
 
-                renderGrid('answer-grid', answers);
-                document.getElementById('status-msg').textContent =
-                    `${lines.length}件読み込みました`;
-                document.getElementById('status-msg').className = 'status-msg';
+                renderGrid();
+                document.getElementById('status-msg').textContent = `${lines.length}件読み込みました`;
             };
             reader.readAsText(file, 'UTF-8');
         }
 
-        function renderGrid(gridId, data) {
-            const grid = document.getElementById(gridId);
+        function renderGrid() {
+            const grid = document.getElementById('answer-grid');
             grid.innerHTML = '';
-            data.forEach((ans, i) => {
+            answers.forEach((ans, i) => {
                 const item = document.createElement('div');
                 item.className = 'answer-item';
                 item.innerHTML = `
           <div class="q-num">${i + 1}問</div>
-          <div class="answer-text">${ans || '未設定'}</div>
+          <div class="answer-text ${ans ? '' : 'unset'}">${ans || '未設定'}</div>
         `;
                 grid.appendChild(item);
             });
         }
 
-        async function loadCurrent() {
+        async function saveAnswers() {
+            const data = {};
+            answers.forEach((ans, i) => { data[i + 1] = ans || '未設定'; });
+            await db.ref('answers_text').set(data);
+            document.getElementById('status-msg').textContent = '保存しました';
+        }
+
+        async function init() {
             const snap = await db.ref('answers_text').get();
             if (snap.exists()) {
                 const data = snap.val();
-                answers = Array.from({ length: 100 }, (_, i) => data[i + 1] || '');
-                renderGrid('current-grid', answers);
-            } else {
-                document.getElementById('current-grid').innerHTML =
-                    '<div style="color:#aaa;grid-column:1/-1;padding:12px">設定なし</div>';
+                answers = Array.from({ length: 100 }, (_, i) => {
+                    const val = data[i + 1];
+                    return (val && val !== '未設定') ? val : '';
+                });
             }
+            renderGrid();
         }
 
-        async function saveCurrent() {
-            const data = {};
-            answers.forEach((ans, i) => { data[i + 1] = ans; });
-            await db.ref('answers_text').set(data);
-            alert('保存しました');
-            renderGrid('current-grid', answers);
-        }
-
-        // 起動時に現在の設定を読み込む
-        loadCurrent();
+        init();
     </script>
 </body>
 
