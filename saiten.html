@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CIQ the 13th 採点システム</title>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: sans-serif;
+      background: #1a1a2e;
+      color: white;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    h1 { font-size: 20px; margin-bottom: 16px; }
+    .top-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    input[type="text"] {
+      flex: 1;
+      min-width: 200px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid #444;
+      background: #0f3460;
+      color: white;
+      font-size: 14px;
+    }
+    .btn {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      background: #4caf50;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn:hover { background: #388e3c; }
+    .btn.secondary {
+      background: #0f3460;
+      border: 1px solid #444;
+    }
+    .btn.secondary:hover { background: #1a4a7a; }
+    .btn.danger {
+      background: #b71c1c;
+    }
+    .btn.danger:hover { background: #7f0000; }
+    .main {
+      display: flex;
+      gap: 20px;
+      align-items: flex-start;
+    }
+    .canvas-container {
+      position: relative;
+      flex: 1;
+      overflow: auto;
+    }
+    #pdf-canvas {
+      display: block;
+      cursor: crosshair;
+    }
+    #overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+    }
+    .sidebar {
+      width: 280px;
+      flex-shrink: 0;
+    }
+    .sidebar-section {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    .sidebar-section h3 {
+      font-size: 14px;
+      color: #aaa;
+      margin-bottom: 12px;
+    }
+    .mode-btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: 2px solid #444;
+      background: transparent;
+      color: #aaa;
+      font-size: 13px;
+      cursor: pointer;
+      margin-bottom: 8px;
+      text-align: left;
+    }
+    .mode-btn.active {
+      border-color: #4caf50;
+      color: white;
+      background: #1b5e20;
+    }
+    .status {
+      font-size: 13px;
+      color: #aaa;
+      margin-top: 8px;
+    }
+    .status span { color: #4caf50; }
+    .progress-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .progress-cell {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 4px;
+      background: #444;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      color: #aaa;
+    }
+    .progress-cell.done { background: #1b5e20; color: white; }
+  </style>
+</head>
+<body>
+  <h1>CIQ the 13th 採点システム - 座標設定</h1>
+
+  <div class="top-bar">
+    <input type="text" id="pdf-url" placeholder="Google Drive PDF の共有URL を貼り付け" />
+    <button class="btn" onclick="loadPDF()">PDFを読み込む</button>
+    <button class="btn secondary" onclick="prevPage()">◀</button>
+    <span id="page-info">- / -</span>
+    <button class="btn secondary" onclick="nextPage()">▶</button>
+  </div>
+
+  <div class="main">
+    <div class="canvas-container">
+      <canvas id="pdf-canvas"></canvas>
+      <canvas id="overlay"></canvas>
+    </div>
+
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <h3>設定モード</h3>
+        <button class="mode-btn active" id="mode-tombo" onclick="setMode('tombo')">
+          📍 トンボ設定（4点）
+        </button>
+        <button class="mode-btn" id="mode-mark" onclick="setMode('mark')">
+          🔢 受付番号マーク設定
+        </button>
+        <button class="mode-btn" id="mode-answer" onclick="setMode('answer')">
+          ✏️ 解答欄設定（100問）
+        </button>
+        <div class="status" id="mode-status">トンボを4点クリックしてください</div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>トンボ</h3>
+        <div class="status" id="tombo-status">未設定</div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>解答欄進捗</h3>
+        <div class="status" id="answer-count">0 / 100</div>
+        <div class="progress-grid" id="progress-grid"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <button class="btn" style="width:100%;margin-bottom:8px" onclick="saveConfig()">
+          設定を保存
+        </button>
+        <button class="btn danger" style="width:100%" onclick="resetConfig()">
+          リセット
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDk-RpKCX5Hd-xNnrso_x5fd3S-vUoWKUc",
+      authDomain: "ciq-saiten.firebaseapp.com",
+      databaseURL: "https://ciq-saiten-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "ciq-saiten",
+      storageBucket: "ciq-saiten.firebasestorage.app",
+      messagingSenderId: "987606904586",
+      appId: "1:987606904586:web:b16876b8963a55a60d94f3"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    pdfjsLib.GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    let pdfDoc = null;
+    let currentPage = 1;
+    let scale = 1.5;
+    let mode = 'tombo';
+    let tomboPoints = [];
+    let markRegions = [];
+    let answerRegions = [];
+    let dragStart = null;
+
+    const canvas = document.getElementById('pdf-canvas');
+    const overlay = document.getElementById('overlay');
+    const ctx = canvas.getContext('2d');
+    const octx = overlay.getContext('2d');
+
+    // プログレスグリッド初期化
+    const grid = document.getElementById('progress-grid');
+    for (let i = 1; i <= 100; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'progress-cell';
+      cell.id = `cell-${i}`;
+      cell.textContent = i;
+      grid.appendChild(cell);
+    }
+
+    function convertDriveUrl(url) {
+      const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if (match) {
+        return `https://drive.google.com/uc?export=download&id=${match[1]}`;
+      }
+      return url;
+    }
+
+    async function loadPDF() {
+      const rawUrl = document.getElementById('pdf-url').value.trim();
+      if (!rawUrl) return;
+      const url = convertDriveUrl(rawUrl);
+      try {
+        pdfDoc = await pdfjsLib.getDocument(url).promise;
+        document.getElementById('page-info').textContent = `1 / ${pdfDoc.numPages}`;
+        currentPage = 1;
+        await renderPage(currentPage);
+      } catch (e) {
+        alert('PDFの読み込みに失敗しました。Google Driveの共有設定を「リンクを知っている全員」にしてください。\n' + e.message);
+      }
+    }
+
+    async function renderPage(num) {
+      const page = await pdfDoc.getPage(num);
+      const viewport = page.getViewport({ scale });
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+      overlay.width = viewport.width;
+      overlay.height = viewport.height;
+      overlay.style.position = 'absolute';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      drawOverlay();
+    }
+
+    function drawOverlay() {
+      octx.clearRect(0, 0, overlay.width, overlay.height);
+
+      // トンボ
+      tomboPoints.forEach((p, i) => {
+        octx.fillStyle = '#ff5722';
+        octx.beginPath();
+        octx.arc(p.x, p.y, 8, 0, Math.PI * 2);
+        octx.fill();
+        octx.fillStyle = 'white';
+        octx.font = '10px sans-serif';
+        octx.fillText(i + 1, p.x - 3, p.y + 4);
+      });
+
+      // マーク領域
+      markRegions.forEach((r, i) => {
+        octx.strokeStyle = '#2196f3';
+        octx.lineWidth = 2;
+        octx.strokeRect(r.x, r.y, r.w, r.h);
+        octx.fillStyle = 'rgba(33,150,243,0.2)';
+        octx.fillRect(r.x, r.y, r.w, r.h);
+      });
+
+      // 解答欄
+      answerRegions.forEach((r, i) => {
+        octx.strokeStyle = '#4caf50';
+        octx.lineWidth = 2;
+        octx.strokeRect(r.x, r.y, r.w, r.h);
+        octx.fillStyle = 'rgba(76,175,80,0.2)';
+        octx.fillRect(r.x, r.y, r.w, r.h);
+        octx.fillStyle = 'white';
+        octx.font = '11px sans-serif';
+        octx.fillText(i + 1, r.x + 2, r.y + 12);
+      });
+
+      // ドラッグ中
+      if (dragStart && dragCurrent) {
+        const x = Math.min(dragStart.x, dragCurrent.x);
+        const y = Math.min(dragStart.y, dragCurrent.y);
+        const w = Math.abs(dragCurrent.x - dragStart.x);
+        const h = Math.abs(dragCurrent.y - dragStart.y);
+        octx.strokeStyle = mode === 'mark' ? '#2196f3' : '#4caf50';
+        octx.lineWidth = 2;
+        octx.setLineDash([4, 4]);
+        octx.strokeRect(x, y, w, h);
+        octx.setLineDash([]);
+      }
+    }
+
+    let dragCurrent = null;
+
+    overlay.addEventListener('mousedown', e => {
+      const pos = getPos(e);
+      if (mode === 'tombo') {
+        if (tomboPoints.length < 4) {
+          tomboPoints.push(pos);
+          updateTomboStatus();
+          drawOverlay();
+        }
+      } else {
+        dragStart = pos;
+        dragCurrent = pos;
+      }
+    });
+
+    overlay.addEventListener('mousemove', e => {
+      if (dragStart) {
+        dragCurrent = getPos(e);
+        drawOverlay();
+      }
+    });
+
+    overlay.addEventListener('mouseup', e => {
+      if (dragStart) {
+        const pos = getPos(e);
+        const x = Math.min(dragStart.x, pos.x);
+        const y = Math.min(dragStart.y, pos.y);
+        const w = Math.abs(pos.x - dragStart.x);
+        const h = Math.abs(pos.y - dragStart.y);
+        if (w > 5 && h > 5) {
+          if (mode === 'mark') {
+            markRegions.push({ x, y, w, h });
+          } else if (mode === 'answer') {
+            if (answerRegions.length < 100) {
+              answerRegions.push({ x, y, w, h });
+              updateAnswerCount();
+            }
+          }
+        }
+        dragStart = null;
+        dragCurrent = null;
+        drawOverlay();
+      }
+    });
+
+    function getPos(e) {
+      const rect = overlay.getBoundingClientRect();
+      return {
+        x: (e.clientX - rect.left),
+        y: (e.clientY - rect.top)
+      };
+    }
+
+    function setMode(m) {
+      mode = m;
+      ['tombo', 'mark', 'answer'].forEach(name => {
+        document.getElementById(`mode-${name}`).classList.toggle('active', name === m);
+      });
+      const msgs = {
+        tombo: 'トンボを4点クリックしてください（左上→右上→左下→右下）',
+        mark: '受付番号マーク欄をドラッグで囲んでください（行ごとに3回）',
+        answer: '解答欄を1問ずつドラッグで囲んでください（1番から順に）'
+      };
+      document.getElementById('mode-status').textContent = msgs[m];
+    }
+
+    function updateTomboStatus() {
+      const labels = ['左上', '右上', '左下', '右下'];
+      const set = tomboPoints.map((_, i) => labels[i]).join('・');
+      const remaining = labels.slice(tomboPoints.length).join('・');
+      document.getElementById('tombo-status').innerHTML =
+        `設定済み: <span>${set || 'なし'}</span><br>残り: ${remaining || 'なし'}`;
+    }
+
+    function updateAnswerCount() {
+      const count = answerRegions.length;
+      document.getElementById('answer-count').textContent = `${count} / 100`;
+      for (let i = 1; i <= 100; i++) {
+        const cell = document.getElementById(`cell-${i}`);
+        cell.classList.toggle('done', i <= count);
+      }
+    }
+
+    async function saveConfig() {
+      if (tomboPoints.length !== 4) {
+        alert('トンボを4点設定してください');
+        return;
+      }
+      if (answerRegions.length !== 100) {
+        alert(`解答欄が${answerRegions.length}問しか設定されていません`);
+        return;
+      }
+      const config = {
+        tombo: tomboPoints,
+        markRegions,
+        answerRegions,
+        scale,
+        savedAt: Date.now()
+      };
+      await db.ref('config').set(config);
+      alert('設定を保存しました');
+    }
+
+    function resetConfig() {
+      if (!confirm('設定をリセットしますか？')) return;
+      tomboPoints = [];
+      markRegions = [];
+      answerRegions = [];
+      updateTomboStatus();
+      updateAnswerCount();
+      drawOverlay();
+    }
+
+    async function prevPage() {
+      if (!pdfDoc || currentPage <= 1) return;
+      currentPage--;
+      document.getElementById('page-info').textContent = `${currentPage} / ${pdfDoc.numPages}`;
+      await renderPage(currentPage);
+    }
+
+    async function nextPage() {
+      if (!pdfDoc || currentPage >= pdfDoc.numPages) return;
+      currentPage++;
+      document.getElementById('page-info').textContent = `${currentPage} / ${pdfDoc.numPages}`;
+      await renderPage(currentPage);
+    }
+  </script>
+</body>
+</html>
