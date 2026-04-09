@@ -144,7 +144,7 @@
             margin-bottom: 8px;
         }
 
-        .entry-num {
+        .entry-name {
             font-size: 12px;
             color: #aaa;
             margin-bottom: 8px;
@@ -232,6 +232,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxUODC2F-hbGRvkOZ2EN-XRpatzJOgEwQiZxNvEZ_TFppXrgKN8rd7RcHHdEq9ZX2KW3A/exec';
+
         const scorerName = sessionStorage.getItem('scorer_name');
         const currentQ = parseInt(sessionStorage.getItem('current_q') || '1');
 
@@ -243,12 +245,21 @@
         let myScores = {};
         let entryNumbers = [];
         let isCompleted = false;
+        let masterData = {};
 
         async function init() {
             // 模範解答読み込み
             const answerSnap = await db.ref(`answers_text/${currentQ}`).get();
             const answerText = answerSnap.exists() ? answerSnap.val() : '未設定';
             document.getElementById('answer-badge').textContent = answerText;
+
+            // マスターデータ取得（受付番号→名前）
+            try {
+                const res = await fetch(GAS_URL + '?master=1');
+                masterData = await res.json();
+            } catch (e) {
+                console.warn('マスターデータ取得失敗:', e);
+            }
 
             // 答案データ読み込み
             const answersSnap = await db.ref('answers').get();
@@ -276,6 +287,12 @@
             });
         }
 
+        function getName(entryNum) {
+            const master = masterData[entryNum];
+            if (master && master.name) return master.name;
+            return `受付番号 ${entryNum}`;
+        }
+
         function renderGrid() {
             const grid = document.getElementById('answer-grid');
             grid.innerHTML = '';
@@ -292,7 +309,7 @@
                 card.className = `answer-card ${myScore === 'correct' ? 'correct' : myScore === 'wrong' ? 'wrong' : ''}`;
                 card.innerHTML = `
           <img src="${imageData || ''}" alt="${entryNum}番" />
-          <div class="entry-num">受付番号 ${entryNum}</div>
+          <div class="entry-name">${getName(entryNum)}</div>
           <div class="mark-btns">
             <button class="mark-btn correct-btn ${myScore === 'correct' ? 'selected-correct' : ''}"
               onclick="mark(${entryNum}, 'correct')">○</button>
@@ -313,7 +330,6 @@
             const done = entryNumbers.filter(n => myScores[n] !== null).length;
             const allDone = done === total && total > 0;
             const btn = document.getElementById('complete-btn');
-            const progressText = document.getElementById('progress-text');
 
             if (isCompleted) {
                 btn.disabled = false;
@@ -328,8 +344,6 @@
                 btn.textContent = '採点完了';
                 btn.classList.remove('done');
             }
-
-            progressText.textContent = `${done} / ${total} 件`;
         }
 
         async function completeScoring() {
@@ -337,11 +351,8 @@
                 await db.ref(`scores/__completed__q${currentQ}/${scorerName}`).remove();
             } else {
                 await db.ref(`scores/__completed__q${currentQ}/${scorerName}`).set(true);
-
-                // 3人完了したら自動確定チェック
                 const snap = await db.ref('scores').get();
                 checkAutoConfirm(snap.val() || {}, currentQ);
-
                 location.href = 'judge.html';
             }
         }
