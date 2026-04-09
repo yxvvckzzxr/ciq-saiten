@@ -186,7 +186,7 @@
       <div class="sidebar-section">
         <h3>設定モード</h3>
         <button class="mode-btn active" id="mode-tombo" onclick="setMode('tombo')">
-          📍 トンボ設定（4点）
+          📍 トンボ設定（4箇所ドラッグ）
         </button>
         <button class="mode-btn" id="mode-mark" onclick="setMode('mark')">
           🔢 受付番号マーク設定（1回ドラッグ）
@@ -197,7 +197,7 @@
         <button class="mode-btn" id="mode-grid" onclick="setMode('grid')">
           🔲 グリッド自動設定
         </button>
-        <div class="status" id="mode-status">トンボを4点クリックしてください</div>
+        <div class="status" id="mode-status">トンボを4箇所ドラッグで囲んでください</div>
       </div>
 
       <div class="sidebar-section">
@@ -248,7 +248,7 @@
     let currentPage = 1;
     let scale = 1.5;
     let mode = 'tombo';
-    let tomboPoints = [];
+    let tomboRegions = [];
     let markRegion = null;   // 1つの矩形→3×10に自動分割
     let markCells = [];      // 分割後の30マス
     let answerRegions = [];
@@ -322,14 +322,15 @@
       octx.clearRect(0, 0, overlay.width, overlay.height);
 
       // トンボ
-      tomboPoints.forEach((p, i) => {
-        octx.fillStyle = '#ff5722';
-        octx.beginPath();
-        octx.arc(p.x, p.y, 8, 0, Math.PI * 2);
-        octx.fill();
+      tomboRegions.forEach((r, i) => {
+        octx.strokeStyle = '#ff5722';
+        octx.lineWidth = 2;
+        octx.strokeRect(r.x, r.y, r.w, r.h);
+        octx.fillStyle = 'rgba(255,87,34,0.2)';
+        octx.fillRect(r.x, r.y, r.w, r.h);
         octx.fillStyle = 'white';
-        octx.font = '10px sans-serif';
-        octx.fillText(i + 1, p.x - 3, p.y + 4);
+        octx.font = '11px sans-serif';
+        octx.fillText(i + 1, r.x + 2, r.y + 12);
       });
 
       // マーク領域（3×10分割表示）
@@ -398,13 +399,7 @@
 
     overlay.addEventListener('mousedown', e => {
       const pos = getPos(e);
-      if (mode === 'tombo') {
-        if (tomboPoints.length < 4) {
-          tomboPoints.push(pos);
-          updateTomboStatus();
-          drawOverlay();
-        }
-      } else if (mode === 'grid') {
+      if (mode === 'grid') {
         gridPoints.push(pos);
         drawOverlay();
         if (gridPoints.length === 2) {
@@ -442,6 +437,11 @@
               answerRegions.push({ x, y, w, h });
               updateAnswerCount();
             }
+          } else if (mode === 'tombo') {
+            if (tomboRegions.length < 4) {
+              tomboRegions.push({ x, y, w, h });
+              updateTomboStatus();
+            }
           }
         }
         dragStart = null;
@@ -465,7 +465,7 @@
         document.getElementById(`mode-${name}`).classList.toggle('active', name === m);
       });
       const msgs = {
-        tombo: 'トンボを4点クリックしてください（左上→右上→左下→右下）',
+        tombo: 'トンボを4箇所ドラッグで囲んでください（左上→右上→左下→右下）',
         mark: '受付番号マーク欄全体を1回ドラッグで囲んでください（3行×10列に自動分割）',
         answer: '解答欄を1問ずつドラッグで囲んでください（1番から順に）',
         grid: '1番の左上角をクリック→100番の右下角をクリックしてください'
@@ -498,8 +498,8 @@
 
     function updateTomboStatus() {
       const labels = ['左上', '右上', '左下', '右下'];
-      const set = tomboPoints.map((_, i) => labels[i]).join('・');
-      const remaining = labels.slice(tomboPoints.length).join('・');
+      const set = tomboRegions.map((_, i) => labels[i]).join('・');
+      const remaining = labels.slice(tomboRegions.length).join('・');
       document.getElementById('tombo-status').innerHTML =
         `設定済み: <span>${set || 'なし'}</span><br>残り: ${remaining || 'なし'}`;
     }
@@ -513,8 +513,8 @@
     }
 
     async function saveConfig() {
-      if (tomboPoints.length !== 4) {
-        alert('トンボを4点設定してください');
+      if (tomboRegions.length !== 4) {
+        alert('トンボを4箇所設定してください');
         return;
       }
       if (!markRegion) {
@@ -526,7 +526,7 @@
         return;
       }
       const config = {
-        tombo: tomboPoints,
+        tombo: tomboRegions,
         markRegion,
         markCells,
         answerRegions,
@@ -539,7 +539,7 @@
 
     function resetConfig() {
       if (!confirm('設定をリセットしますか？')) return;
-      tomboPoints = [];
+      tomboRegions = [];
       markRegion = null;
       markCells = [];
       answerRegions = [];

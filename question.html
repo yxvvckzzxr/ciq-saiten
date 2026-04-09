@@ -124,6 +124,8 @@
             border: 2px solid #444;
             transition: border-color 0.2s, box-shadow 0.2s;
             cursor: pointer;
+            content-visibility: auto;
+            contain-intrinsic-size: 160px 120px;
         }
 
         .answer-card.correct {
@@ -258,7 +260,7 @@
                 const card = document.createElement('div');
                 card.className = `answer-card ${myScore === 'correct' ? 'correct' : myScore === 'wrong' ? 'wrong' : ''} ${idx === selectedIndex ? 'selected' : ''}`;
                 card.innerHTML = `
-          <img src="${imageData || ''}" alt="${displayName}" />
+          <img src="${imageData || ''}" alt="${displayName}" loading="lazy" />
           <div class="entry-num">${displayName}</div>
         `;
                 card.addEventListener('click', () => selectCard(idx));

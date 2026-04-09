@@ -77,6 +77,8 @@
             border: 2px solid #ff9800;
             cursor: pointer;
             transition: box-shadow 0.2s;
+            content-visibility: auto;
+            contain-intrinsic-size: 220px 250px;
         }
 
         .conflict-card.resolved {
@@ -307,7 +309,7 @@
             <div class="q-tag">${q}問</div>
             <div class="entry-tag">${displayName}</div>
           </div>
-          <img class="answer-img" src="${imageData || ''}" alt="${displayName} ${q}問" />
+          <img class="answer-img" src="${imageData || ''}" alt="${displayName} ${q}問" loading="lazy" />
           ${modelAnswer ? `<div class="model-answer">${modelAnswer}</div>` : ''}
           <div class="scorer-votes">${votesHtml}</div>
           ${finalResult ? `<div class="final-result ${finalResult}">判定: ${finalResult === 'correct' ? '○' : '×'}</div>` : ''}
