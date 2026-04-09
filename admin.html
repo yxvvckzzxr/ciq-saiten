@@ -27,6 +27,7 @@
             align-items: center;
             gap: 12px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         h1 {
@@ -47,6 +48,11 @@
             background: #388e3c;
         }
 
+        .btn:disabled {
+            background: #444;
+            cursor: not-allowed;
+        }
+
         .btn.secondary {
             background: #0f3460;
             border: 1px solid #444;
@@ -54,14 +60,6 @@
 
         .btn.secondary:hover {
             background: #1a4a7a;
-        }
-
-        .btn.danger {
-            background: #b71c1c;
-        }
-
-        .btn.danger:hover {
-            background: #7f0000;
         }
 
         .section {
@@ -72,16 +70,16 @@
         }
 
         .section h2 {
-            font-size: 16px;
-            margin-bottom: 16px;
+            font-size: 15px;
             color: #aaa;
+            margin-bottom: 16px;
         }
 
         .stats {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
         .stat-card {
@@ -100,140 +98,6 @@
             font-size: 12px;
             color: #aaa;
             margin-top: 4px;
-        }
-
-        .conflict-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .conflict-item {
-            background: #2a1500;
-            border: 1px solid #ff9800;
-            border-radius: 10px;
-            padding: 16px;
-        }
-
-        .conflict-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .conflict-q {
-            font-size: 18px;
-            font-weight: bold;
-        }
-
-        .scorer-results {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-        }
-
-        .scorer-result {
-            background: #333;
-            padding: 6px 12px;
-            border-radius: 6px;
-            font-size: 13px;
-        }
-
-        .scorer-result.correct {
-            background: #1b5e20;
-        }
-
-        .scorer-result.wrong {
-            background: #b71c1c;
-        }
-
-        .entry-results {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .entry-result {
-            background: #1a1a2e;
-            border-radius: 8px;
-            padding: 8px;
-            text-align: center;
-            font-size: 12px;
-        }
-
-        .entry-result img {
-            width: 100%;
-            height: 50px;
-            object-fit: contain;
-            background: white;
-            border-radius: 4px;
-            margin-bottom: 4px;
-        }
-
-        .vote-detail {
-            color: #aaa;
-            font-size: 11px;
-        }
-
-        .final-btns {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
-        }
-
-        .final-btn {
-            flex: 1;
-            padding: 10px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .final-btn.correct {
-            background: #1b5e20;
-            color: #4caf50;
-        }
-
-        .final-btn.correct:hover {
-            background: #2e7d32;
-        }
-
-        .final-btn.wrong {
-            background: #b71c1c;
-            color: #ef5350;
-        }
-
-        .final-btn.wrong:hover {
-            background: #c62828;
-        }
-
-        .final-btn.selected-correct {
-            background: #4caf50;
-            color: white;
-        }
-
-        .final-btn.selected-wrong {
-            background: #ef5350;
-            color: white;
-        }
-
-        .confirmed-badge {
-            background: #1a237e;
-            color: #90caf9;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 11px;
-        }
-
-        .no-conflict {
-            color: #aaa;
-            text-align: center;
-            padding: 20px;
         }
 
         .progress-overview {
@@ -272,6 +136,26 @@
             background: #0d47a1;
             color: white;
         }
+
+        .csv-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .csv-status {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .csv-status.ready {
+            color: #4caf50;
+        }
+
+        .csv-status.notready {
+            color: #ef5350;
+        }
     </style>
 </head>
 
@@ -279,14 +163,19 @@
     <div class="top-bar">
         <button class="btn secondary" onclick="location.href='judge.html'">← 一覧へ</button>
         <h1>管理者画面</h1>
-        <button class="btn" style="margin-left:auto" onclick="exportCSV()">CSV出力</button>
+        <button class="btn secondary" onclick="location.href='answer_setup.html'" style="margin-left:auto">
+            模範解答設定
+        </button>
+        <button class="btn secondary" onclick="location.href='conflict.html'">
+            要確認一覧
+        </button>
     </div>
 
     <div class="section">
         <h2>採点状況</h2>
         <div class="stats">
             <div class="stat-card">
-                <div class="stat-num" id="stat-total">-</div>
+                <div class="stat-num" id="stat-total">100</div>
                 <div class="stat-label">総問題数</div>
             </div>
             <div class="stat-card">
@@ -306,9 +195,10 @@
     </div>
 
     <div class="section">
-        <h2>要確認問題（食い違いあり）</h2>
-        <div class="conflict-list" id="conflict-list">
-            <div class="no-conflict">読み込み中...</div>
+        <h2>CSV出力</h2>
+        <div class="csv-section">
+            <div class="csv-status" id="csv-status">確認中...</div>
+            <button class="btn" id="csv-btn" disabled onclick="exportCSV()">CSV出力</button>
         </div>
     </div>
 
@@ -326,6 +216,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        const GAS_URL = 'https://script.google.com/macros/s/AKfycbxUODC2F-hbGRvkOZ2EN-XRpatzJOgEwQiZxNvEZ_TFppXrgKN8rd7RcHHdEq9ZX2KW3A/exec';
+
         const scorerRole = sessionStorage.getItem('scorer_role');
         if (scorerRole !== 'admin') {
             alert('管理者のみアクセスできます');
@@ -342,15 +234,13 @@
             po.appendChild(cell);
         }
 
-        let answersData = {};
         let scoresData = {};
         let entryNumbers = [];
 
         async function init() {
             const answersSnap = await db.ref('answers').get();
             if (answersSnap.exists()) {
-                answersData = answersSnap.val();
-                entryNumbers = Object.keys(answersData).map(Number).sort((a, b) => a - b);
+                entryNumbers = Object.keys(answersSnap.val()).map(Number).sort((a, b) => a - b);
             }
 
             db.ref('scores').on('value', snap => {
@@ -363,147 +253,86 @@
             let doneCount = 0;
             let conflictCount = 0;
             let confirmedCount = 0;
-            const conflictItems = [];
+            let allConfirmed = true;
 
             for (let q = 1; q <= 100; q++) {
                 const completedScorers = Object.keys(scoresData[`__completed__q${q}`] || {});
-                const isConfirmed = scoresData[`__final__q${q}`] !== undefined;
                 const allDone = completedScorers.length >= 3;
 
                 let hasConflict = false;
-                const conflictEntries = [];
+                let allResolved = true;
 
                 if (allDone) {
                     entryNumbers.forEach(entryNum => {
                         const qScores = scoresData[entryNum]?.[`q${q}`] || {};
-                        const vals = Object.entries(qScores);
-                        const corrects = vals.filter(([, v]) => v === 'correct').length;
-                        const wrongs = vals.filter(([, v]) => v === 'wrong').length;
+                        const vals = Object.values(qScores);
+                        const corrects = vals.filter(v => v === 'correct').length;
+                        const wrongs = vals.filter(v => v === 'wrong').length;
                         if (corrects > 0 && wrongs > 0) {
                             hasConflict = true;
-                            conflictEntries.push({ entryNum, scores: qScores });
+                            const finalResult = scoresData[`__final__q${q}`]?.[entryNum];
+                            if (!finalResult) allResolved = false;
                         }
                     });
                 }
 
-                // 進捗グリッド更新
+                const isFullyConfirmed = allDone && (!hasConflict || allResolved);
+
                 const cell = document.getElementById(`po-${q}`);
                 cell.className = 'po-cell';
-                if (isConfirmed) {
+
+                if (isFullyConfirmed) {
                     cell.classList.add('confirmed');
                     confirmedCount++;
                 } else if (hasConflict) {
                     cell.classList.add('conflict');
                     conflictCount++;
+                    allConfirmed = false;
                 } else if (allDone) {
                     cell.classList.add('done');
                     doneCount++;
                 } else if (completedScorers.length > 0) {
                     cell.classList.add('inprogress');
-                }
-
-                if (hasConflict && !isConfirmed) {
-                    conflictItems.push({ q, conflictEntries, completedScorers });
+                    allConfirmed = false;
+                } else {
+                    allConfirmed = false;
                 }
             }
 
-            document.getElementById('stat-total').textContent = 100;
-            document.getElementById('stat-done').textContent = doneCount;
+            document.getElementById('stat-done').textContent = doneCount + confirmedCount;
             document.getElementById('stat-conflict').textContent = conflictCount;
             document.getElementById('stat-confirmed').textContent = confirmedCount;
 
-            renderConflicts(conflictItems);
+            const csvStatus = document.getElementById('csv-status');
+            const csvBtn = document.getElementById('csv-btn');
+
+            if (allConfirmed && confirmedCount === 100) {
+                csvStatus.textContent = '全問確定済み。CSV出力できます。';
+                csvStatus.className = 'csv-status ready';
+                csvBtn.disabled = false;
+            } else {
+                csvStatus.textContent = `未確定の問題があります（確定済み: ${confirmedCount}/100）`;
+                csvStatus.className = 'csv-status notready';
+                csvBtn.disabled = true;
+            }
         }
 
-        function renderConflicts(items) {
-            const list = document.getElementById('conflict-list');
-            if (items.length === 0) {
-                list.innerHTML = '<div class="no-conflict">要確認問題はありません</div>';
-                return;
+        async function exportCSV() {
+            // マスターデータをGASから取得
+            let masterData = {};
+            try {
+                const res = await fetch(GAS_URL + '?master=1');
+                masterData = await res.json();
+            } catch (e) {
+                console.warn('マスターデータ取得失敗:', e);
             }
 
-            list.innerHTML = '';
-            items.forEach(({ q, conflictEntries, completedScorers }) => {
-                const finalData = scoresData[`__final__q${q}`] || {};
-
-                const item = document.createElement('div');
-                item.className = 'conflict-item';
-
-                // 採点者ごとの集計
-                const scorerSummary = {};
-                entryNumbers.forEach(entryNum => {
-                    const qScores = scoresData[entryNum]?.[`q${q}`] || {};
-                    Object.entries(qScores).forEach(([name, val]) => {
-                        if (!scorerSummary[name]) scorerSummary[name] = { correct: 0, wrong: 0 };
-                        scorerSummary[name][val]++;
-                    });
-                });
-
-                const scorerResultsHtml = Object.entries(scorerSummary).map(([name, counts]) => `
-          <div class="scorer-result">
-            ${name}: ○${counts.correct} ×${counts.wrong}
-          </div>
-        `).join('');
-
-                const entryResultsHtml = conflictEntries.map(({ entryNum, scores: entryScores }) => {
-                    const imageData = answersData[entryNum]?.cells[`q${q}`];
-                    const scoreDetail = Object.entries(entryScores)
-                        .map(([name, val]) => `${name}:${val === 'correct' ? '○' : '×'}`)
-                        .join(' ');
-                    const finalResult = finalData[entryNum];
-                    return `
-            <div class="entry-result">
-              <img src="${imageData || ''}" alt="${entryNum}番" />
-              <div>受付番号 ${entryNum}</div>
-              <div class="vote-detail">${scoreDetail}</div>
-              ${finalResult ? `<div style="color:${finalResult === 'correct' ? '#4caf50' : '#ef5350'};font-weight:bold">${finalResult === 'correct' ? '○確定' : '×確定'}</div>` : ''}
-            </div>
-          `;
-                }).join('');
-
-                const allConfirmed = conflictEntries.every(({ entryNum }) => finalData[entryNum]);
-
-                item.innerHTML = `
-          <div class="conflict-header">
-            <div class="conflict-q">${q}問</div>
-            ${allConfirmed ? '<span class="confirmed-badge">確定済み</span>' : ''}
-          </div>
-          <div class="scorer-results">${scorerResultsHtml}</div>
-          <div class="entry-results">${entryResultsHtml}</div>
-          <div class="final-btns">
-            <button class="final-btn correct ${allConfirmed ? 'selected-correct' : ''}"
-              onclick="setFinal(${q}, 'correct')">全員○に確定</button>
-            <button class="final-btn wrong ${allConfirmed ? 'selected-wrong' : ''}"
-              onclick="setFinal(${q}, 'wrong')">全員×に確定</button>
-          </div>
-        `;
-                list.appendChild(item);
-            });
-        }
-
-        async function setFinal(q, result) {
-            const finals = {};
-            entryNumbers.forEach(entryNum => {
-                const qScores = scoresData[entryNum]?.[`q${q}`] || {};
-                const vals = Object.values(qScores);
-                const corrects = vals.filter(v => v === 'correct').length;
-                const wrongs = vals.filter(v => v === 'wrong').length;
-                if (corrects > 0 && wrongs > 0) {
-                    finals[entryNum] = result;
-                }
-            });
-            await db.ref(`scores/__final__q${q}`).set(finals);
-        }
-
-        function exportCSV() {
-            const rows = [['受付番号', ...Array.from({ length: 100 }, (_, i) => `${i + 1}問`), '合計']];
-
-            entryNumbers.forEach(entryNum => {
-                const row = [entryNum];
-                let total = 0;
+            // 各参加者の得点を計算
+            const results = entryNumbers.map(entryNum => {
+                const answers = [];
                 for (let q = 1; q <= 100; q++) {
-                    const qScores = scoresData[entryNum]?.[`q${q}`] || {};
                     const finalData = scoresData[`__final__q${q}`] || {};
+                    const qScores = scoresData[entryNum]?.[`q${q}`] || {};
 
                     let result;
                     if (finalData[entryNum]) {
@@ -511,15 +340,68 @@
                     } else {
                         const vals = Object.values(qScores);
                         const corrects = vals.filter(v => v === 'correct').length;
-                        const wrongs = vals.filter(v => v === 'wrong').length;
-                        if (corrects > wrongs) result = 1;
-                        else if (wrongs > corrects) result = 0;
-                        else result = '?';
+                        result = corrects >= 2 ? 1 : 0;
                     }
-                    row.push(result);
-                    if (result === 1) total++;
+                    answers.push(result);
                 }
-                row.push(total);
+
+                const score = answers.reduce((a, b) => a + b, 0);
+
+                // 連答計算
+                const streaks = [];
+                let current = 0;
+                answers.forEach(a => {
+                    if (a === 1) {
+                        current++;
+                    } else {
+                        if (current > 0) streaks.push(current);
+                        current = 0;
+                    }
+                });
+                if (current > 0) streaks.push(current);
+
+                const master = masterData[entryNum] || {};
+
+                return {
+                    entryNumber: entryNum,
+                    name: master.name || '',
+                    affiliation: master.affiliation || '',
+                    grade: master.grade || '',
+                    score,
+                    answers,
+                    streaks
+                };
+            });
+
+            // 順位計算（点数→タイブレーク）
+            results.sort((a, b) => {
+                if (b.score !== a.score) return b.score - a.score;
+                // タイブレーク：1問目から比較
+                for (let i = 0; i < 100; i++) {
+                    const diff = b.answers[i] - a.answers[i];
+                    if (diff !== 0) return diff;
+                }
+                return 0;
+            });
+
+            // CSV生成
+            const headers = ['順位', '氏名', '所属', '学年', '点数'];
+            // 連答の最大数を計算
+            const maxStreaks = Math.max(...results.map(r => r.streaks.length), 0);
+            for (let i = 1; i <= maxStreaks; i++) {
+                headers.push(`第${i}連答`);
+            }
+
+            const rows = [headers];
+            let rank = 1;
+            results.forEach((r, idx) => {
+                if (idx > 0 && compareForRank(results[idx - 1], r) !== 0) {
+                    rank = idx + 1;
+                }
+                const row = [rank, r.name, r.affiliation, r.grade, r.score];
+                for (let i = 0; i < maxStreaks; i++) {
+                    row.push(r.streaks[i] || 0);
+                }
                 rows.push(row);
             });
 
@@ -528,8 +410,17 @@
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = 'saiten_result.csv';
+            a.download = 'ciq_result.csv';
             a.click();
+        }
+
+        function compareForRank(a, b) {
+            if (b.score !== a.score) return b.score - a.score;
+            for (let i = 0; i < 100; i++) {
+                const diff = b.answers[i] - a.answers[i];
+                if (diff !== 0) return diff;
+            }
+            return 0;
         }
 
         init();
