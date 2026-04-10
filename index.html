@@ -258,10 +258,15 @@ let selectedRole = 'scorer';
       location.href = 'saiten.html';
     }
 
-    // エンターキー対応
+    // エンターキー対応（IME変換確定のEnterを無視）
+    let justComposed = false;
+    document.addEventListener('compositionend', () => {
+      justComposed = true;
+      setTimeout(() => justComposed = false, 300);
+    });
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
-        if (e.isComposing) return;
+        if (e.isComposing || justComposed) return;
         if (currentTab === 'join') {
           joinProject();
         } else {
