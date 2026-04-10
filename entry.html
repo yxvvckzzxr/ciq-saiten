@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,7 +11,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <script src="js/config.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Outfit', sans-serif;
             background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
@@ -21,71 +27,204 @@
             align-items: center;
             padding: 40px 20px;
         }
-        .container { width: 100%; max-width: 600px; }
-        .logo { text-align: center; margin-bottom: 32px; }
-        .logo h1 { font-size: 28px; font-weight: 700; letter-spacing: 1px; }
-        .logo p { color: #8e8ea0; font-size: 14px; margin-top: 6px; }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 1px;
+        }
+
+        .logo p {
+            color: #8e8ea0;
+            font-size: 14px;
+            margin-top: 6px;
+        }
 
         .card {
             background: rgba(22, 33, 62, 0.85);
             backdrop-filter: blur(12px);
             border-radius: 20px;
             padding: 32px;
-            border: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
         }
-        .form-group { margin-bottom: 20px; }
-        .form-row { display: flex; gap: 16px; }
-        .form-row .form-group { flex: 1; }
-        
-        label { font-size: 14px; color: #8e8ea0; display: block; margin-bottom: 8px; font-weight: 600; }
-        .required::after { content: " *"; color: #ef5350; }
-        .hint { font-size: 12px; color: #666; margin-top: 4px; }
 
-        input[type="text"], input[type="email"], select, textarea {
-            width: 100%; padding: 14px 16px; border-radius: 12px;
-            border: 1px solid rgba(255,255,255,0.1); background: rgba(15,52,96,0.6);
-            color: white; font-size: 16px; font-family: sans-serif;
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .form-row .form-group {
+            flex: 1;
+        }
+
+        label {
+            font-size: 14px;
+            color: #8e8ea0;
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .required::after {
+            content: " *";
+            color: #ef5350;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(15, 52, 96, 0.6);
+            color: white;
+            font-size: 16px;
+            font-family: sans-serif;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
-        textarea { resize: vertical; min-height: 100px; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: #7c5cfc; box-shadow: 0 0 0 2px rgba(124,92,252,0.2); }
-        input::placeholder, textarea::placeholder { color: #555; }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #7c5cfc;
+            box-shadow: 0 0 0 2px rgba(124, 92, 252, 0.2);
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #555;
+        }
 
         .checkbox-label {
-            display: flex; align-items: flex-start; gap: 10px;
-            cursor: pointer; font-size: 14px; color: #ccc; line-height: 1.4;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #ccc;
+            line-height: 1.4;
             margin-top: 10px;
         }
+
         .checkbox-label input[type="checkbox"] {
-            width: 18px; height: 18px; margin-top: 2px;
-            cursor: pointer; accent-color: #7c5cfc;
+            width: 18px;
+            height: 18px;
+            margin-top: 2px;
+            cursor: pointer;
+            accent-color: #7c5cfc;
         }
 
         .submit-btn {
-            width: 100%; padding: 16px; border-radius: 12px; border: none;
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: none;
             background: linear-gradient(135deg, #7c5cfc, #a855f7);
-            color: white; font-size: 18px; font-weight: 700; cursor: pointer;
-            margin-top: 32px; transition: transform 0.15s, box-shadow 0.2s;
-            font-family: 'Outfit', sans-serif; letter-spacing: 1px;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 32px;
+            transition: transform 0.15s, box-shadow 0.2s;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: 1px;
         }
-        .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(124,92,252,0.4); }
-        .submit-btn:active { transform: translateY(0); }
-        .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(124, 92, 252, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
 
         .status-msg {
-            margin-top: 20px; padding: 16px; border-radius: 10px;
-            font-size: 14px; text-align: center; display: none; line-height: 1.5;
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            text-align: center;
+            display: none;
+            line-height: 1.5;
         }
-        .status-msg.error { background: rgba(239,83,80,0.15); border: 1px solid rgba(239,83,80,0.3); color: #ef5350; }
-        .status-msg.success { background: rgba(76,175,80,0.15); border: 1px solid rgba(76,175,80,0.3); color: #81c784; }
-        .status-msg.info { background: rgba(33,150,243,0.15); border: 1px solid rgba(33,150,243,0.3); color: #90caf9; }
 
-        .pw-display { font-size: 24px; font-family: monospace; letter-spacing: 3px; font-weight: bold; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; margin: 10px 0; color: #fff; }
+        .status-msg.error {
+            background: rgba(239, 83, 80, 0.15);
+            border: 1px solid rgba(239, 83, 80, 0.3);
+            color: #ef5350;
+        }
 
-        .disabled-msg { text-align: center; padding: 40px 20px; color: #8e8ea0; font-size: 16px; display: none; }
+        .status-msg.success {
+            background: rgba(76, 175, 80, 0.15);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #81c784;
+        }
+
+        .status-msg.info {
+            background: rgba(33, 150, 243, 0.15);
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            color: #90caf9;
+        }
+
+        .pw-display {
+            font-size: 24px;
+            font-family: monospace;
+            letter-spacing: 3px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+            color: #fff;
+        }
+
+        .disabled-msg {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8e8ea0;
+            font-size: 16px;
+            display: none;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="logo">
@@ -119,11 +258,13 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label class="required">セイ (全角カタカナ)</label>
-                        <input type="text" id="f-family-kana" required placeholder="ヤマダ" pattern="^[ァ-ヴー]+$" title="全角カタカナで入力してください">
+                        <input type="text" id="f-family-kana" required placeholder="ヤマダ" pattern="^[ァ-ヴー]+$"
+                            title="全角カタカナで入力してください">
                     </div>
                     <div class="form-group">
                         <label class="required">メイ (全角カタカナ)</label>
-                        <input type="text" id="f-first-kana" required placeholder="タロウ" pattern="^[ァ-ヴー]+$" title="全角カタカナで入力してください">
+                        <input type="text" id="f-first-kana" required placeholder="タロウ" pattern="^[ァ-ヴー]+$"
+                            title="全角カタカナで入力してください">
                     </div>
                 </div>
 
@@ -166,7 +307,8 @@
                     <label class="checkbox-label">
                         <input type="checkbox" id="f-tos" required>
                         <span>私は大会の参加規約に同意し、入力した情報が正確であることを確認しました。<br>
-                        <span style="color:#ef5350;font-size:12px">※ 受付コードはメールで送信されますので、受信可能なアドレスであることを必ず確認してください。</span></span>
+                            <span style="color:#ef5350;font-size:12px">※
+                                受付コードはメールで送信されますので、受信可能なアドレスであることを必ず確認してください。</span></span>
                     </label>
                 </div>
 
@@ -178,169 +320,173 @@
         <div class="card result" id="result-card" style="display:none; text-align:center;">
             <h2 style="color: #81c784; margin-bottom: 16px;">✅ エントリー完了！</h2>
             <p style="margin-bottom: 24px; color: #ccc;">以下の情報で受付いたしました。<br>メールアドレスにも同じ情報をお送りしています。</p>
-            
+
             <div style="background: rgba(0,0,0,0.2); padding: 20px; border-radius: 12px; margin-bottom: 24px;">
                 <p style="color: #aaa; font-size: 13px; margin-bottom: 4px;">あなたの受付番号</p>
-                <div style="font-size: 36px; font-weight: bold; color: #7c5cfc; margin-bottom: 16px;" id="r-entry-number">---</div>
-                
+                <div style="font-size: 36px; font-weight: bold; color: #7c5cfc; margin-bottom: 16px;"
+                    id="r-entry-number">---</div>
+
                 <p style="color: #aaa; font-size: 13px; margin-bottom: 4px;">成績開示・キャンセル用パスワード</p>
                 <div class="pw-display" id="r-password">------</div>
-                <p style="color: #ef5350; font-size: 12px; font-weight:bold;">※ このパスワードは再発行できません。必ずスクリーンショット等で保存してください。</p>
+                <p style="color: #ef5350; font-size: 12px; font-weight:bold;">※ このパスワードは再発行できません。必ずスクリーンショット等で保存してください。
+                </p>
             </div>
 
-            <button class="submit-btn" style="background: transparent; border: 2px solid #7c5cfc;" onclick="location.reload()">新しいエントリーを行う</button>
+            <button class="submit-btn" style="background: transparent; border: 2px solid #7c5cfc;"
+                onclick="location.reload()">新しいエントリーを行う</button>
         </div>
     </div>
 
     <script>
-    const params = new URLSearchParams(location.search);
-    const projectId = params.get('pid');
+        const params = new URLSearchParams(location.search);
+        const projectId = params.get('pid');
 
-    if (!projectId) {
-        document.getElementById('form-card').style.display = 'none';
-        const d = document.getElementById('disabled-card');
-        d.innerHTML = '<p>プロジェクトが指定されていません。</p><p style="margin-top:8px;font-size:13px">正しいエントリーURLへアクセスしてください。</p>';
-        d.style.display = 'block';
-// deleted GAS_URL
-        if (!projectId) return;
-
-        // DBから設定情報を取得
-        const snap = await db.ref(`projects/${projectId}/settings`).once('value');
-        if (snap.exists()) {
-            const settings = snap.val();
-            document.getElementById('project-title').textContent = settings.projectName || '大会エントリー';
-        }
-
-        const configSnap = await db.ref(`projects/${projectId}/entryConfig/entryEnabled`).once('value');
-        // 初期状態など未設定の時はtrue扱いにするか、明示的にfalseを扱うか。
-        // ここでは、明示的に false にされていない限り受付中にする。
-        if (configSnap.exists() && configSnap.val() === false) {
+        if (!projectId) {
             document.getElementById('form-card').style.display = 'none';
-            document.getElementById('disabled-card').style.display = 'block';
+            const d = document.getElementById('disabled-card');
+            d.innerHTML = '<p>プロジェクトが指定されていません。</p><p style="margin-top:8px;font-size:13px">正しいエントリーURLへアクセスしてください。</p>';
+            d.style.display = 'block';
+            // deleted GAS_URL
+            if (!projectId) return;
+
+            // DBから設定情報を取得
+            const snap = await db.ref(`projects/${projectId}/settings`).once('value');
+            if (snap.exists()) {
+                const settings = snap.val();
+                document.getElementById('project-title').textContent = settings.projectName || '大会エントリー';
+            }
+
+            const configSnap = await db.ref(`projects/${projectId}/entryConfig/entryEnabled`).once('value');
+            // 初期状態など未設定の時はtrue扱いにするか、明示的にfalseを扱うか。
+            // ここでは、明示的に false にされていない限り受付中にする。
+            if (configSnap.exists() && configSnap.val() === false) {
+                document.getElementById('form-card').style.display = 'none';
+                document.getElementById('disabled-card').style.display = 'block';
+            }
         }
-    }
 
-    function generateUUID() {
-        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-            const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
-            return v.toString(16);
-        });
-    }
-
-    function generatePW() {
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
-        let pw = '';
-        for (let i = 0; i < 6; i++) {
-            pw += chars.charAt(Math.floor(Math.random() * chars.length));
-        }
-        return pw;
-    }
-
-    function showStatus(msg, type) {
-        const sm = document.getElementById('status-msg');
-        sm.textContent = msg;
-        sm.className = `status-msg ${type}`;
-        sm.style.display = 'block';
-    }
-
-    document.getElementById('entry-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const btn = document.getElementById('submit-btn');
-        btn.disabled = true;
-        btn.textContent = '処理中...';
-        showStatus('エントリーを送信しています...', 'info');
-
-        const email = document.getElementById('f-email').value.trim();
-        const familyName = document.getElementById('f-family-name').value.trim();
-        const firstName = document.getElementById('f-first-name').value.trim();
-        const familyNameKana = document.getElementById('f-family-kana').value.trim();
-        const firstNameKana = document.getElementById('f-first-kana').value.trim();
-        const affiliation = document.getElementById('f-affiliation').value.trim();
-        const grade = document.getElementById('f-grade').value;
-        const entryName = document.getElementById('f-entry-name').value.trim();
-        const message = document.getElementById('f-message').value.trim();
-        const inquiry = document.getElementById('f-inquiry').value.trim();
-
-        const uuid = generateUUID();
-        const pw = generatePW();
-
-        try {
-            // トランザクションで受付番号を取得
-            const counterRef = db.ref(`projects/${projectId}/entryConfig/lastEntryNumber`);
-            const { committed, snapshot } = await counterRef.transaction((currentValue) => {
-                return (currentValue || 0) + 1;
+        function generateUUID() {
+            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+                return v.toString(16);
             });
-
-            if (!committed) {
-                throw new Error("受付番号の取得に失敗しました。再度お試しください。");
-            }
-
-            const entryNumber = snapshot.val();
-            const pwHash = await hashPassword(pw);
-
-            const entryData = {
-                uuid,
-                email,
-                familyName,
-                firstName,
-                familyNameKana,
-                firstNameKana,
-                affiliation,
-                grade,
-                entryName,
-                message,
-                inquiry,
-                entryNumber,
-                disclosurePw: pwHash,
-                status: 'registered', // registered, canceled
-                checkedIn: false,
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-
-            // DBに保存
-            await db.ref(`projects/${projectId}/entries/${uuid}`).set(entryData);
-
-            // GAS APIを呼び出してメール送信
-            if (typeof SYSTEM_GAS_URL !== 'undefined' && SYSTEM_GAS_URL.startsWith('http')) {
-                try {
-                    const pName = document.getElementById('project-title').textContent;
-                    const mailParams = new URLSearchParams({
-                        action: 'entryMail',
-                        projectName: pName,
-                        email,
-                        familyName,
-                        firstName,
-                        entryNumber,
-                        pw,
-                        uuid
-                    });
-                    
-                    await fetch(SYSTEM_GAS_URL + '?' + mailParams.toString(), {
-                        method: 'GET',
-                        mode: 'no-cors'
-                    });
-                } catch(e) {
-                    console.error('GAS送信エラー(無視可能):', e);
-                }
-            }
-
-            // 成功画面を表示
-            document.getElementById('form-card').style.display = 'none';
-            document.getElementById('result-card').style.display = 'block';
-            document.getElementById('r-entry-number').textContent = String(entryNumber).padStart(3, '0');
-            document.getElementById('r-password').textContent = pw;
-            showStatus('', '');
-
-        } catch (err) {
-            console.error(err);
-            btn.disabled = false;
-            btn.textContent = 'エントリーを確定する';
-            showStatus('エラーが発生しました: ' + err.message, 'error');
         }
-    });
 
-    init();
+        function generatePW() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            let pw = '';
+            for (let i = 0; i < 6; i++) {
+                pw += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return pw;
+        }
+
+        function showStatus(msg, type) {
+            const sm = document.getElementById('status-msg');
+            sm.textContent = msg;
+            sm.className = `status-msg ${type}`;
+            sm.style.display = 'block';
+        }
+
+        document.getElementById('entry-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const btn = document.getElementById('submit-btn');
+            btn.disabled = true;
+            btn.textContent = '処理中...';
+            showStatus('エントリーを送信しています...', 'info');
+
+            const email = document.getElementById('f-email').value.trim();
+            const familyName = document.getElementById('f-family-name').value.trim();
+            const firstName = document.getElementById('f-first-name').value.trim();
+            const familyNameKana = document.getElementById('f-family-kana').value.trim();
+            const firstNameKana = document.getElementById('f-first-kana').value.trim();
+            const affiliation = document.getElementById('f-affiliation').value.trim();
+            const grade = document.getElementById('f-grade').value;
+            const entryName = document.getElementById('f-entry-name').value.trim();
+            const message = document.getElementById('f-message').value.trim();
+            const inquiry = document.getElementById('f-inquiry').value.trim();
+
+            const uuid = generateUUID();
+            const pw = generatePW();
+
+            try {
+                // トランザクションで受付番号を取得
+                const counterRef = db.ref(`projects/${projectId}/entryConfig/lastEntryNumber`);
+                const { committed, snapshot } = await counterRef.transaction((currentValue) => {
+                    return (currentValue || 0) + 1;
+                });
+
+                if (!committed) {
+                    throw new Error("受付番号の取得に失敗しました。再度お試しください。");
+                }
+
+                const entryNumber = snapshot.val();
+                const pwHash = await hashPassword(pw);
+
+                const entryData = {
+                    uuid,
+                    email,
+                    familyName,
+                    firstName,
+                    familyNameKana,
+                    firstNameKana,
+                    affiliation,
+                    grade,
+                    entryName,
+                    message,
+                    inquiry,
+                    entryNumber,
+                    disclosurePw: pwHash,
+                    status: 'registered', // registered, canceled
+                    checkedIn: false,
+                    timestamp: firebase.database.ServerValue.TIMESTAMP
+                };
+
+                // DBに、保存
+                await db.ref(`projects/${projectId}/entries/${uuid}`).set(entryData);
+
+                // GAS APIを呼び出してメール送信
+                if (typeof SYSTEM_GAS_URL !== 'undefined' && SYSTEM_GAS_URL.startsWith('http')) {
+                    try {
+                        const pName = document.getElementById('project-title').textContent;
+                        const mailParams = new URLSearchParams({
+                            action: 'entryMail',
+                            projectName: pName,
+                            email,
+                            familyName,
+                            firstName,
+                            entryNumber,
+                            pw,
+                            uuid
+                        });
+
+                        await fetch(SYSTEM_GAS_URL + '?' + mailParams.toString(), {
+                            method: 'GET',
+                            mode: 'no-cors'
+                        });
+                    } catch (e) {
+                        console.error('GAS送信エラー(無視可能):', e);
+                    }
+                }
+
+                // 成功画面を表示
+                document.getElementById('form-card').style.display = 'none';
+                document.getElementById('result-card').style.display = 'block';
+                document.getElementById('r-entry-number').textContent = String(entryNumber).padStart(3, '0');
+                document.getElementById('r-password').textContent = pw;
+                showStatus('', '');
+
+            } catch (err) {
+                console.error(err);
+                btn.disabled = false;
+                btn.textContent = 'エントリーを確定する';
+                showStatus('エラーが発生しました: ' + err.message, 'error');
+            }
+        });
+
+        init();
     </script>
 </body>
+
 </html>
