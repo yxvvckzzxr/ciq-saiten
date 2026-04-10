@@ -1222,9 +1222,7 @@
             requestAnimationFrame(scanQRFrame);
         }
 
-        // ============================
-        // 成績開示
-        // ============================
+
         async function toggleDisclosure() {
             const enabled = document.getElementById('disclosure-toggle').checked;
             await db.ref(`projects/${projectId}/entryConfig/disclosureEnabled`).set(enabled);
