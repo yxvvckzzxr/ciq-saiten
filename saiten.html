@@ -206,41 +206,56 @@
         doc.setFontSize(10);
         doc.text("受付番号", 15, bottomY + 4);
 
-        const markSheetX = 35;
+        const markSheetX = 15;
         const markSheetY = bottomY + 8;
-        const bubbleW = 4;
-        const bubbleH = 6;
+        const bubbleW = 3.5;
+        const bubbleH = 5.5;
         
         doc.setFontSize(8);
-        for (let col = 0; col < 3; col++) {
-          // 手書き枠
-          const cx = markSheetX + col * (bubbleW + 2);
-          doc.rect(cx, markSheetY - 7, bubbleW, 6, 'S');
+        for (let row = 0; row < 3; row++) {
+          // 手書き枠 (左側)
+          const boxY = markSheetY + row * (bubbleH + 2.5);
+          doc.rect(markSheetX, boxY, 6, 6, 'S');
 
-          for (let row = 0; row < 10; row++) {
-            const cy = markSheetY + row * (bubbleH + 1.0);
+          for (let col = 0; col < 10; col++) {
+            const cx = markSheetX + 10 + col * (bubbleW + 2.5);
+            const cy = boxY;
             
             doc.ellipse(cx + bubbleW/2, cy + bubbleH/2, bubbleW/2, bubbleH/2, 'S');
-            doc.text(row.toString(), cx + bubbleW/2, cy + bubbleH/2, { align: 'center', baseline: 'middle' });
+            doc.text(col.toString(), cx + bubbleW/2, cy + bubbleH/2, { align: 'center', baseline: 'middle' });
             
             // scoring.html は cell.row を 桁数(0-2)、cell.col を 値(0-9) とみなす
-            config.markCells.push({ x: cx, y: cy, w: bubbleW, h: bubbleH, row: col, col: row });
+            // ここでは描画の row が 桁数、col が 値 となる
+            config.markCells.push({ x: cx, y: cy, w: bubbleW, h: bubbleH, row: row, col: col });
           }
         }
 
-        // 4. 名前・所属枠 (Bottom Right)
-        const nameBoxX = 75;
-        const nameBoxY = bottomY - 3;
-        const boxW = 120;
+        // 4. 名前・所属・学年枠 (Bottom Right)
+        const nameBoxX = 90;
+        const nameBoxY = bottomY + 5;
+        const boxW = 105;
         doc.rect(nameBoxX, nameBoxY, boxW, 26, 'S');
-        doc.line(nameBoxX + boxW/3, nameBoxY, nameBoxX + boxW/3, nameBoxY + 26, 'S');
-        doc.line(nameBoxX + (boxW*2)/3, nameBoxY, nameBoxX + (boxW*2)/3, nameBoxY + 26, 'S');
+        
+        // 区切り線 (左から: 学年ラベル10mm、学年枠15mm、所属ラベル10mm、所属枠35mm、氏名ラベル10mm、氏名枠残り)
+        const L1 = 10;
+        const L2 = 25;
+        const L3 = 35;
+        const L4 = 70;
+        const L5 = 80;
+        
+        doc.line(nameBoxX + L1, nameBoxY, nameBoxX + L1, nameBoxY + 26, 'S');
+        doc.line(nameBoxX + L2, nameBoxY, nameBoxX + L2, nameBoxY + 26, 'S');
+        doc.line(nameBoxX + L3, nameBoxY, nameBoxX + L3, nameBoxY + 26, 'S');
+        doc.line(nameBoxX + L4, nameBoxY, nameBoxX + L4, nameBoxY + 26, 'S');
+        doc.line(nameBoxX + L5, nameBoxY, nameBoxX + L5, nameBoxY + 26, 'S');
 
-        // 上部ラベル
+        // ラベル
         doc.setFontSize(8);
-        doc.text("学年", nameBoxX + 2, nameBoxY + 4);
-        doc.text("氏名", nameBoxX + boxW/3 + 2, nameBoxY + 4);
-        doc.text("所属", nameBoxX + (boxW*2)/3 + 2, nameBoxY + 4);
+        doc.text("学年", nameBoxX + L1/2, nameBoxY + 13, { align: 'center', baseline: 'middle' });
+        doc.text("所属", nameBoxX + L2 + (L3-L2)/2, nameBoxY + 13, { align: 'center', baseline: 'middle' });
+        doc.text("氏名", nameBoxX + L4 + (L5-L4)/2, nameBoxY + 13, { align: 'center', baseline: 'middle' });
+
+
 
 
         // PDFのダウンロード
