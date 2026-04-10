@@ -240,9 +240,9 @@
                 // トンボ検出 (矩形ベース)
                 const detectedResult = detectTombo(config.tombo);
 
-                // アフィン変換行列を計算（設定側は矩形の中心を正確な基準点とする）
+                // 完全な射影変換行列（ホモグラフィ）を計算し、歪みを正確に補正する
                 const refCenterPoints = config.tombo.map(r => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 }));
-                const transform = calcTransform(refCenterPoints, detectedResult);
+                const transform = calcPerspectiveTransform(refCenterPoints, detectedResult.points);
 
                 // 受付番号読み取り（補正済み座標を使用）
                 const correctedMarkCells = config.markCells.map(cell => transformRegion(cell, transform));
@@ -320,81 +320,61 @@
             return { points: detected, error };
         }
 
-        // アフィン変換行列を計算（最小二乗法）
-        // 設定時のトンボ座標 → 検出されたトンボ座標への変換
-        function calcTransform(refPoints, detectedResult) {
-            const src = refPoints; // 設定時の座標
-            const dst = detectedResult.points; // 検出された座標
-
-            if (dst.length < 3) {
-                return { a: 1, b: 0, c: 0, d: 0, e: 1, f: 0 }; // 単位変換（補正なし）
+        // 4点から射影変換（ホモグラフィ）行列を計算
+        // 歪んだ画像（斜め撮り等）も正確に補正可能にする
+        function calcPerspectiveTransform(src, dst) {
+            if (src.length < 4 || dst.length < 4) {
+                return null;
             }
 
-            // アフィン変換: dst = A * src + t
-            // [x'] = [a b] [x] + [c]
-            // [y']   [d e] [y]   [f]
-            // 最小二乗法で解く（4点以上使用）
-
-            const n = Math.min(src.length, dst.length);
-
-            // Ax = b の形で解く
-            // 各点: dst.x = a*src.x + b*src.y + c
-            //       dst.y = d*src.x + e*src.y + f
-
-            let sumX = 0, sumY = 0, sumXX = 0, sumXY = 0, sumYY = 0;
-            let sumDstX = 0, sumDstY = 0;
-            let sumXDstX = 0, sumYDstX = 0;
-            let sumXDstY = 0, sumYDstY = 0;
-
-            for (let i = 0; i < n; i++) {
+            const A = [];
+            const b = [];
+            for (let i = 0; i < 4; i++) {
                 const sx = src[i].x, sy = src[i].y;
                 const dx = dst[i].x, dy = dst[i].y;
-                sumX += sx; sumY += sy;
-                sumXX += sx * sx; sumXY += sx * sy; sumYY += sy * sy;
-                sumDstX += dx; sumDstY += dy;
-                sumXDstX += sx * dx; sumYDstX += sy * dx;
-                sumXDstY += sx * dy; sumYDstY += sy * dy;
+                A.push([sx, sy, 1, 0, 0, 0, -sx * dx, -sy * dx]);
+                b.push(dx);
+                A.push([0, 0, 0, sx, sy, 1, -sx * dy, -sy * dy]);
+                b.push(dy);
             }
 
-            // 3x3行列を解く（ガウス消去法の簡易版）
-            // [sumXX sumXY sumX] [a]   [sumXDstX]
-            // [sumXY sumYY sumY] [b] = [sumYDstX]
-            // [sumX  sumY  n   ] [c]   [sumDstX ]
+            const n = 8;
+            const M = A.map((row, i) => [...row, b[i]]);
+            
+            for (let col = 0; col < n; col++) {
+                let maxRow = col;
+                for (let row = col + 1; row < n; row++) {
+                    if (Math.abs(M[row][col]) > Math.abs(M[maxRow][col])) maxRow = row;
+                }
+                [M[col], M[maxRow]] = [M[maxRow], M[col]];
+                if (M[col][col] === 0) return null;
 
-            const solveLinear = (A, b) => {
-                const n = b.length;
-                const M = A.map((row, i) => [...row, b[i]]);
-                for (let col = 0; col < n; col++) {
-                    let maxRow = col;
-                    for (let row = col + 1; row < n; row++) {
-                        if (Math.abs(M[row][col]) > Math.abs(M[maxRow][col])) maxRow = row;
-                    }
-                    [M[col], M[maxRow]] = [M[maxRow], M[col]];
-                    for (let row = col + 1; row < n; row++) {
-                        const factor = M[row][col] / M[col][col];
-                        for (let j = col; j <= n; j++) M[row][j] -= factor * M[col][j];
-                    }
+                for (let row = col + 1; row < n; row++) {
+                    const factor = M[row][col] / M[col][col];
+                    for (let j = col; j <= n; j++) M[row][j] -= factor * M[col][j];
                 }
-                const x = new Array(n).fill(0);
-                for (let i = n - 1; i >= 0; i--) {
-                    x[i] = M[i][n] / M[i][i];
-                    for (let j = i - 1; j >= 0; j--) M[j][n] -= M[j][i] * x[i];
-                }
-                return x;
+            }
+
+            const h = new Array(n).fill(0);
+            for (let i = n - 1; i >= 0; i--) {
+                h[i] = M[i][n] / M[i][i];
+                for (let j = i - 1; j >= 0; j--) M[j][n] -= M[j][i] * h[i];
+            }
+
+            return {
+                h00: h[0], h01: h[1], h02: h[2],
+                h10: h[3], h11: h[4], h12: h[5],
+                h20: h[6], h21: h[7]
             };
-
-            const matX = [[sumXX, sumXY, sumX], [sumXY, sumYY, sumY], [sumX, sumY, n]];
-            const solX = solveLinear(matX, [sumXDstX, sumYDstX, sumDstX]);
-            const solY = solveLinear(matX, [sumXDstY, sumYDstY, sumDstY]);
-
-            return { a: solX[0], b: solX[1], c: solX[2], d: solY[0], e: solY[1], f: solY[2] };
         }
 
-        // 座標をアフィン変換で補正
+        // 座標を射影変換で補正
         function transformPoint(x, y, t) {
+            if (!t) return { x, y };
+            const div = t.h20 * x + t.h21 * y + 1;
             return {
-                x: t.a * x + t.b * y + t.c,
-                y: t.d * x + t.e * y + t.f
+                x: (t.h00 * x + t.h01 * y + t.h02) / div,
+                y: (t.h10 * x + t.h11 * y + t.h12) / div
             };
         }
 

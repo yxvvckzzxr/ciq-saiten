@@ -154,6 +154,11 @@
             font-weight: bold;
         }
 
+        .vote-hold {
+            color: #ff9800;
+            font-weight: bold;
+        }
+
         .conflict-card.selected {
             box-shadow: 0 0 0 3px #2196f3, 0 0 12px rgba(33, 150, 243, 0.3);
         }
@@ -266,8 +271,9 @@
                     const entries = Object.entries(qScores);
                     const corrects = entries.filter(([, v]) => v === 'correct').length;
                     const wrongs = entries.filter(([, v]) => v === 'wrong').length;
+                    const holds = entries.filter(([, v]) => v === 'hold').length;
 
-                    if (corrects > 0 && wrongs > 0) {
+                    if ((corrects > 0 && wrongs > 0) || holds > 0) {
                         const finalResult = scoresData[`__final__q${q}`]?.[entryNum];
                         conflicts.push({ q, entryNum, qScores, finalResult });
                     }
@@ -311,14 +317,20 @@
                 const card = document.createElement('div');
                 card.className = `conflict-card ${finalResult ? 'resolved' : ''} ${idx === selectedIndex ? 'selected' : ''}`;
 
-                const votesHtml = Object.entries(qScores).map(([name, val]) => `
+                const votesHtml = Object.entries(qScores).map(([name, val]) => {
+                    let voteText = '';
+                    let voteClass = '';
+                    if (val === 'correct') { voteText = '○'; voteClass = 'vote-correct'; }
+                    else if (val === 'wrong') { voteText = '×'; voteClass = 'vote-wrong'; }
+                    else if (val === 'hold') { voteText = '△'; voteClass = 'vote-hold'; }
+                    return `
           <div class="vote-item">
             <span>${name}</span>
-            <span class="${val === 'correct' ? 'vote-correct' : 'vote-wrong'}">
-              ${val === 'correct' ? '○' : '×'}
+            <span class="${voteClass}">
+              ${voteText}
             </span>
-          </div>
-        `).join('');
+          </div>`;
+                }).join('');
 
                 card.innerHTML = `
           <div class="card-header">

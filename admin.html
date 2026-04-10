@@ -259,7 +259,9 @@
                         const vals = Object.values(qScores);
                         const corrects = vals.filter(v => v === 'correct').length;
                         const wrongs = vals.filter(v => v === 'wrong').length;
-                        if (corrects > 0 && wrongs > 0) {
+                        const holds = vals.filter(v => v === 'hold').length;
+                        
+                        if ((corrects > 0 && wrongs > 0) || holds > 0) {
                             hasConflict = true;
                             if (!scoresData[`__final__q${q}`]?.[entryNum]) allResolved = false;
                         }

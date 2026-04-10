@@ -138,6 +138,11 @@
             background: #3a1b1b;
         }
 
+        .answer-card.hold {
+            border-color: #ff9800;
+            background: #3a2b1b;
+        }
+
         .answer-card img {
             width: 100%;
             height: 70px;
@@ -271,7 +276,7 @@
                 const displayName = masterData[entryNum]?.name || `受付番号 ${entryNum}`;
 
                 const card = document.createElement('div');
-                card.className = `answer-card ${myScore === 'correct' ? 'correct' : myScore === 'wrong' ? 'wrong' : ''} ${idx === selectedIndex ? 'selected' : ''}`;
+                card.className = `answer-card ${myScore === 'correct' ? 'correct' : myScore === 'wrong' ? 'wrong' : myScore === 'hold' ? 'hold' : ''} ${idx === selectedIndex ? 'selected' : ''}`;
                 card.innerHTML = `
           <img src="${imageData || ''}" alt="${displayName}" loading="lazy" />
           <div class="entry-num">${displayName}</div>
@@ -328,6 +333,13 @@
                 const entryNum = entryNumbers[selectedIndex];
                 if (entryNum !== undefined) {
                     mark(entryNum, 'wrong');
+                    advanceSelection();
+                }
+            } else if (key === 'h' || key === 'H') {
+                e.preventDefault();
+                const entryNum = entryNumbers[selectedIndex];
+                if (entryNum !== undefined) {
+                    mark(entryNum, 'hold');
                     advanceSelection();
                 }
             } else if (key === 'ArrowRight') {
@@ -399,8 +411,9 @@
                 const vals = Object.values(qScores);
                 const corrects = vals.filter(v => v === 'correct').length;
                 const wrongs = vals.filter(v => v === 'wrong').length;
+                const holds = vals.filter(v => v === 'hold').length;
 
-                if (corrects > 0 && wrongs > 0) {
+                if ((corrects > 0 && wrongs > 0) || holds > 0) {
                     allAgree = false;
                     break;
                 }
