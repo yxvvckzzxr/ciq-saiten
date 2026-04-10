@@ -444,10 +444,10 @@
                             uuid
                         });
 
-                        await fetch(SYSTEM_GAS_URL + '?' + mailParams.toString(), {
-                            method: 'GET',
-                            mode: 'no-cors'
-                        });
+                        fetch(SYSTEM_GAS_URL + '?' + mailParams.toString())
+                            .then(r => r.text())
+                            .then(t => console.log('GAS応答:', t))
+                            .catch(e => console.error('GAS送信エラー:', e));
                     } catch (e) {
                         console.error('GAS送信エラー(無視可能):', e);
                     }
