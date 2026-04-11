@@ -276,20 +276,19 @@
                     <button class="btn" style="width:auto;padding:0 24px;" onclick="updateProjectName()"><i class="fa-solid fa-arrows-rotate"></i> 更新</button>
                 </div>
 
-                <h2><i class="fa-solid fa-lock"></i> パスワード変更</h2>
-                <div style="background:rgba(15,23,42,0.5);padding:20px;border-radius:var(--radius-md);border:1px solid var(--glass-border);">
-                    <label><i class="fa-solid fa-key"></i> 現在のパスワード</label>
-                    <input type="password" id="setting-old-pwd" placeholder="現在のパスワード" />
-                    <label style="margin-top:16px"><i class="fa-solid fa-key"></i> 新しいパスワード</label>
-                    <div style="position:relative;margin-bottom:16px;">
-                        <input type="password" id="setting-new-pwd" placeholder="英大・英小・数字を含む8文字以上" />
-                        <span style="position:absolute;right:12px;top:12px;cursor:pointer;color:var(--text-muted)" onclick="toggleSettingPassword('setting-new-pwd')"><i class="fas fa-eye"></i></span>
-                    </div>
-                    <label><i class="fa-solid fa-key"></i> 確認用</label>
-                    <input type="password" id="setting-confirm-pwd" placeholder="もう一度入力" />
-                    <button class="btn" style="margin-top:16px;" onclick="updateProjectPassword()"><i class="fa-solid fa-shield-halved"></i> 変更する</button>
-                </div>
             </div>
+        </div>
+    </div>
+    
+    <!-- 全画面保存オーバーレイ -->
+    <div id="save-overlay" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(15,23,42,0.85);backdrop-filter:blur(8px);z-index:9999;flex-direction:column;align-items:center;justify-content:center;color:white;">
+        <i class="fa-solid fa-cloud-arrow-up fa-3x" style="margin-bottom:20px;color:var(--primary)"></i>
+        <h2 style="margin-bottom:20px;font-size:24px;letter-spacing:0.05em">サーバーへ保存中...</h2>
+        <div class="progress-bar-wrap" style="width:80%;max-width:500px;height:12px;background:rgba(255,255,255,0.1);border-radius:6px;overflow:hidden;box-shadow:inset 0 1px 3px rgba(0,0,0,0.5);">
+            <div class="progress-bar-inner" id="save-overlay-bar" style="width:0%;height:100%;transition:width 0.3s ease;"></div>
+        </div>
+        <div id="save-overlay-text" style="color:var(--text-muted);margin-top:16px;font-size:16px;font-weight:600">0 / 0 件</div>
+    </div>
         </div>
     </div>
 

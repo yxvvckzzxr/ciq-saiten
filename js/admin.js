@@ -395,7 +395,14 @@ function showDbAuthError() {
             document.getElementById('save-btn').disabled = true;
             let current = 0;
             const total = scanAnswers.length;
-            document.getElementById('status-text').textContent = `保存中... (0/${total})`;
+            document.getElementById('status-text').textContent = '保存中...';
+            
+            const overlay = document.getElementById('save-overlay');
+            const overlayBar = document.getElementById('save-overlay-bar');
+            const overlayText = document.getElementById('save-overlay-text');
+            overlay.style.display = 'flex';
+            overlayBar.style.width = '0%';
+            overlayText.textContent = `0 / ${total} 件`;
 
             for (const a of scanAnswers) {
                 const data = {
@@ -405,10 +412,15 @@ function showDbAuthError() {
                 };
                 await db.ref(`projects/${projectId}/protected/${secretHash}/answers/${a.entryNumber}`).set(data);
                 current++;
-                document.getElementById('status-text').textContent = `保存中... (${current}/${total})`;
+                overlayBar.style.width = `${(current / total) * 100}%`;
+                overlayText.textContent = `${current} / ${total} 件`;
             }
 
             document.getElementById('status-text').textContent = '保存完了しました';
+            overlayText.textContent = '保存完了！';
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 800);
             document.getElementById('save-btn').disabled = false;
             loadEntryList();
         }
@@ -598,17 +610,6 @@ function showDbAuthError() {
         // ============================
         // 設定更新処理
         // ============================
-        function toggleSettingPassword(id) {
-            const input = document.getElementById(id);
-            const icon = input.nextElementSibling.querySelector('i');
-            if (input.type === 'password') {
-                input.type = 'text';
-                if(icon) { icon.classList.remove('fa-eye'); icon.classList.add('fa-eye-slash'); }
-            } else {
-                input.type = 'password';
-                if(icon) { icon.classList.remove('fa-eye-slash'); icon.classList.add('fa-eye'); }
-            }
-        }
 
         async function updateProjectName() {
             const name = document.getElementById('setting-project-name').value.trim();
