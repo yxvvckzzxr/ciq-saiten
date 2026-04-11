@@ -1,3 +1,24 @@
+
+window.addEventListener('unhandledrejection', function(event) {
+    if (event.reason && event.reason.message && event.reason.message.includes('PERMISSION_DENIED')) {
+        event.preventDefault(); // hide from console
+        document.body.innerHTML = ''; // wipe loading
+        showDbAuthError();
+    }
+});
+
+function showDbAuthError() {
+    const div = document.createElement('div');
+    div.className = 'error-overlay';
+    div.innerHTML = `
+        <div class="error-dialog">
+            <h2><i class="fa-solid fa-triangle-exclamation"></i> データベース通信拒否</h2>
+            <p>Firebaseのセキュリティルールが原因でデータが読み込めません。<br>（PERMISSION_DENIEDエラー）<br><br>管理者に連絡し、最新のルールがFirebase Consoleに適用されているか確認してください。</p>
+            <button class="btn danger" onclick="location.href='index.html'">ログイン画面へ戻る</button>
+        </div>
+    `;
+    document.body.appendChild(div);
+}
         function showAdminToast(msg, type = 'error') {
             const t = document.getElementById('admin-toast');
             if(!t) return;
@@ -529,7 +550,7 @@
         async function renderAnalytics() {
             const tbody = document.getElementById('analytics-tbody'); if (!entryNumbers.length) { tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:12px">データがありません</td></tr>'; return; }
             const qs = await getAnalyticsData();
-            tbody.innerHTML = qs.map(s => `<tr style="${s.isRare ? 'background:rgba(255,152,0,0.2);font-weight:bold' : ''}"><td style="padding:8px;border:1px solid #444;text-align:center">${s.q}</td><td style="padding:8px;border:1px solid #444;text-align:center">${s.correctCount}人</td><td style="padding:8px;border:1px solid #444;text-align:center">${s.rate}%</td><td style="padding:8px;border:1px solid #444;text-align:center;${s.type === '単独正解' ? 'color:#ff9800' : s.type === '全滅' ? 'color:#ef5350' : ''}">${s.type}</td><td style="padding:8px;border:1px solid #444;font-size:12px">${s.names}</td></tr>`).join('');
+            tbody.innerHTML = qs.map(s => `<tr style="${s.isRare ? 'background:rgba(255,152,0,0.2);font-weight:bold' : ''}"><td >${s.q}</td><td >${s.correctCount}人</td><td >${s.rate}%</td><td >${s.type}</td><td >${s.names}</td></tr>`).join('');
         }
         async function exportAnalyticsCSV() {
             const qs = await getAnalyticsData(); const headers = ['問題番号', '正答数', '正答率(%)', '状態', '正解者一覧']; const rows = [headers];
@@ -633,17 +654,17 @@
                     
                     const tr = document.createElement('tr');
                     if (v.status === 'canceled') tr.style.opacity = '0.5';
-                    const statText = v.status === 'canceled' ? '<span style="color:#ef5350">ｷｬﾝｾﾙ</span>'
-                        : v.checkedIn ? '<span style="color:#4caf50">受付済</span>' : '未受付';
+                    const statText = v.status === 'canceled' ? '<span class="badge danger">ｷｬﾝｾﾙ</span>'
+                        : v.checkedIn ? '<span class="badge success">受付済</span>' : '<span class="badge muted">未受付</span>';
 
                     tr.innerHTML = `
-                    <td style="padding:8px;border:1px solid #444;">${v.entryNumber || '-'}</td>
-                    <td style="padding:8px;border:1px solid #444;">${pii.familyName || '-'} ${pii.firstName || '-'}<br><span style="font-size:11px;color:#aaa">${pii.familyNameKana || ''} ${pii.firstNameKana || ''}</span></td>
-                    <td style="padding:8px;border:1px solid #444;">${pii.entryName || ''}</td>
-                    <td style="padding:8px;border:1px solid #444;">${pii.affiliation || ''}</td>
-                    <td style="padding:8px;border:1px solid #444;">${pii.grade || ''}</td>
-                    <td style="padding:8px;border:1px solid #444;"><span style="font-size:11px;color:#aaa">${pii.email || ''}</span><br>${pii.inquiry || '-'}</td>
-                    <td style="padding:8px;border:1px solid #444;font-weight:bold;">${statText}</td>
+                    <td >${v.entryNumber || '-'}</td>
+                    <td >${pii.familyName || '-'} ${pii.firstName || '-'}<br><span style="font-size:11px;color:#aaa">${pii.familyNameKana || ''} ${pii.firstNameKana || ''}</span></td>
+                    <td >${pii.entryName || ''}</td>
+                    <td >${pii.affiliation || ''}</td>
+                    <td >${pii.grade || ''}</td>
+                    <td ><span style="font-size:11px;color:#aaa">${pii.email || ''}</span><br>${pii.inquiry || '-'}</td>
+                    <td >${statText}</td>
                 `;
                     tbody.appendChild(tr);
                 }

@@ -1,0 +1,203 @@
+/* QuizOpus Global Design System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Noto+Sans+JP:wght@400;500;600;800&display=swap');
+
+:root {
+  /* Color Palette */
+  --bg-dark: #020617;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --glass-bg: rgba(30, 41, 59, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --glass-blur: 16px;
+  
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --accent: #fbbf24;
+  --danger: #ef4444;
+  --success: #10b981;
+  --warning: #f59e0b;
+
+  /* Typography */
+  --text-main: #f8fafc;
+  --text-muted: #94a3b8;
+  --font-family: 'Inter', 'Noto Sans JP', sans-serif;
+
+  /* Radii */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-pill: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.2), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Base resets & typography */
+body {
+  font-family: var(--font-family);
+  background: radial-gradient(circle at top left, var(--bg-primary), var(--bg-secondary), var(--bg-dark));
+  background-attachment: fixed;
+  color: var(--text-main);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+a { color: var(--primary); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Buttons */
+.btn {
+  background: linear-gradient(135deg, var(--primary), var(--primary-hover));
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: var(--shadow-md);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-glow);
+}
+.btn:active {
+  transform: translateY(0);
+}
+.btn.secondary { background: var(--bg-secondary); border: 1px solid var(--glass-border); box-shadow: none; }
+.btn.secondary:hover { background: #334155; box-shadow: var(--shadow-sm); }
+
+.btn.danger { background: linear-gradient(135deg, #f87171, var(--danger)); }
+.btn.danger:hover { box-shadow: 0 0 12px rgba(239, 68, 68, 0.4); }
+
+.btn.success { background: linear-gradient(135deg, #34d399, var(--success)); }
+.btn.success:hover { box-shadow: 0 0 12px rgba(16, 185, 129, 0.4); }
+
+/* Inputs */
+input[type="text"], input[type="password"], input[type="number"], select {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
+  padding: 12px 14px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: var(--font-family);
+}
+input:focus, select:focus {
+  border-color: var(--primary);
+  background: rgba(15, 23, 42, 0.9);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Glassmorphic Panels / Cards */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--glass-border);
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+}
+
+/* Badges / Status Pills */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.badge.primary { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+.badge.success { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.badge.danger { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
+.badge.warning { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+.badge.muted { background: rgba(148,163,184,0.1); color: #94a3b8; border: 1px solid rgba(148,163,184,0.2); }
+
+/* Tables */
+.table-container {
+  overflow-x: auto;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: rgba(15, 23, 42, 0.4);
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 13px;
+}
+table th {
+  background: rgba(30, 41, 59, 0.8);
+  color: var(--text-muted);
+  font-weight: 600;
+  padding: 12px 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 11px;
+  border-bottom: 1px solid var(--glass-border);
+}
+table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  vertical-align: middle;
+}
+table tbody tr {
+  transition: background 0.15s ease;
+}
+table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+/* Modal Error Overlay */
+.error-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.error-dialog {
+  background: var(--bg-secondary);
+  border: 2px solid var(--danger);
+  border-radius: var(--radius-lg);
+  padding: 32px;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(239, 68, 68, 0.3);
+}
+.error-dialog h2 { color: #f87171; margin-bottom: 12px; }
+.error-dialog p { color: var(--text-muted); font-size: 14px; margin-bottom: 24px; line-height: 1.6; }

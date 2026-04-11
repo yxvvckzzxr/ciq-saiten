@@ -1,15 +1,8 @@
-<!DOCTYPE html>
-<html lang="ja">
+import re
+with open('question.html', 'r') as f:
+    content = f.read()
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QuizOpus</title>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    <script src="js/config.js"></script>
-  <script src="js/crypto.js"></script>
-    <style>
+new_style = """<style>
         .fixed-header { position: fixed; top: 0; left: 0; right: 0; background: rgba(15, 36, 64, 0.9); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 12px 20px; display: flex; align-items: center; justify-content: space-between; z-index: 100; box-shadow: var(--shadow-md); }
         .q-badge { background: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 6px 16px; border-radius: var(--radius-pill); font-weight: 800; font-size: 16px; border: 1px solid rgba(59, 130, 246, 0.4); }
         .answer-badge { font-size: 24px; font-weight: bold; letter-spacing: 2px; }
@@ -48,37 +41,10 @@
         .preview-grid .pv-item img { width:100%; background:white; border-radius:6px; cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line><line x1="11" y1="8" x2="11" y2="14"></line><line x1="8" y1="11" x2="14" y2="11"></line></svg>'), auto; }
         .preview-grid .pv-item .pv-label { font-size:12px; color:var(--text-muted); margin-top:8px; font-weight:600; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    </style>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="css/design_system.css">
-</head>
+    </style>"""
 
-<body>
-    <div class="fixed-header">
-        <button class="btn secondary" onclick="location.href='judge.html'">← 一覧へ</button>
-        <div class="q-badge" id="q-badge">- 問</div>
-        <div class="answer-badge" id="answer-badge">...</div>
-        <div class="progress-text" id="progress-text"></div>
-    </div>
+content = re.sub(r'<style>.*?</style>', new_style, content, flags=re.DOTALL)
 
-    <div class="answer-grid" id="answer-grid">
-        <div class="loading">読み込み中...</div>
-    </div>
+with open('question.html', 'w') as f:
+    f.write(content)
 
-        <div class="shortcut-bar">
-        <span><kbd>M</kbd> 正解</span>
-        <span><kbd>X</kbd> 不正解</span>
-        <span><kbd>H</kbd> 保留</span>
-        <span><kbd>←→↑↓</kbd> 移動</span>
-    </div>
-
-    <div class="mobile-action-bar" id="mobile-action-bar">
-        <button class="btn" style="background:#1b5e20;color:white;" onclick="scoreSelected('correct')"><i class="fa-solid fa-check"></i><span>正解</span></button>
-        <button class="btn" style="background:#c62828;color:white;" onclick="scoreSelected('wrong')"><i class="fa-solid fa-xmark"></i><span>不正解</span></button>
-        <button class="btn" style="background:#f57c00;color:white;" onclick="scoreSelected('hold')"><i class="fa-solid fa-triangle-exclamation"></i><span>保留</span></button>
-    </div>
-
-    <script src="js/question.js"></script>
-</body>
-
-</html>

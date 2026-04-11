@@ -1,3 +1,24 @@
+
+window.addEventListener('unhandledrejection', function(event) {
+    if (event.reason && event.reason.message && event.reason.message.includes('PERMISSION_DENIED')) {
+        event.preventDefault(); // hide from console
+        document.body.innerHTML = ''; // wipe loading
+        showDbAuthError();
+    }
+});
+
+function showDbAuthError() {
+    const div = document.createElement('div');
+    div.className = 'error-overlay';
+    div.innerHTML = `
+        <div class="error-dialog">
+            <h2><i class="fa-solid fa-triangle-exclamation"></i> データベース通信拒否</h2>
+            <p>Firebaseのセキュリティルールが原因でデータが読み込めません。<br>（PERMISSION_DENIEDエラー）<br><br>管理者に連絡し、最新のルールがFirebase Consoleに適用されているか確認してください。</p>
+            <button class="btn danger" onclick="location.href='index.html'">ログイン画面へ戻る</button>
+        </div>
+    `;
+    document.body.appendChild(div);
+}
 const projectId = session.projectId;
         const secretHash = session.get("secretHash");
         const scorerName = session.scorerName;
