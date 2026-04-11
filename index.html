@@ -274,8 +274,13 @@
         以前保存した <code>.ciq</code> ファイルを選択し、新しい設定の下で解答データを復旧します。過去のIDとの競合を防ぐため「新しい参加ID」が発行されます。
       </div>
       
-      <label>バックアップファイル (.ciq)</label>
-      <input type="file" id="import-file" accept=".ciq,application/json" style="margin-bottom: 16px; width: 100%; font-size: 14px;" />
+      <label><i class="fa-solid fa-file-arrow-up"></i> バックアップファイル</label>
+      <div class="file-upload-zone" onclick="document.getElementById('import-file').click()" style="margin-bottom:16px;padding:16px">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <div class="file-label">.ciq ファイルを選択</div>
+        <div class="file-name" id="import-file-name"></div>
+        <input type="file" id="import-file" accept=".ciq,application/json" onchange="document.getElementById('import-file-name').textContent=this.files[0]?.name||'';document.getElementById('import-file-name').style.display=this.files[0]?'block':'none'" />
+      </div>
       
       <label>新しいプロジェクト名</label>
       <input type="text" id="import-project-name" placeholder="例：QuizOpus 2026 (復旧版)" />
@@ -284,7 +289,7 @@
 
       
       
-      <label>あなたのお名前（管理者）</label>
+      <label><i class="fa-solid fa-user"></i> あなたのお名前</label>
       <input type="text" id="import-name" placeholder="例：山田太郎" />
       
       <button class="btn" id="import-btn" style="margin-top: 8px;" onclick="importProject()">復元して新設 <i class="fa-solid fa-upload"></i></button>

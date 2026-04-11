@@ -323,3 +323,44 @@ select {
 .csv-status { font-size: 13px; color: var(--text-muted); margin-bottom: 12px; }
 .csv-status.ready { color: #34d399; }
 .csv-status.notready { color: #f87171; }
+
+/* ===== Custom Checkbox ===== */
+input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  width: 20px; height: 20px; flex-shrink: 0;
+  background: rgba(15, 23, 42, 0.6);
+  border: 2px solid var(--glass-border);
+  border-radius: 5px; cursor: pointer;
+  position: relative; transition: all 0.2s;
+  vertical-align: middle;
+}
+input[type="checkbox"]:hover {
+  border-color: var(--primary);
+  background: rgba(59,130,246,0.1);
+}
+input[type="checkbox"]:checked {
+  background: var(--primary);
+  border-color: var(--primary);
+}
+input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 5px; top: 1px;
+  width: 6px; height: 11px;
+  border: solid white; border-width: 0 2.5px 2.5px 0;
+  transform: rotate(45deg);
+}
+input[type="checkbox"]:focus-visible {
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.3);
+  outline: none;
+}
+
+/* ===== Custom Select (Enhanced) ===== */
+select {
+  cursor: pointer;
+}
+select option {
+  background: var(--bg-secondary);
+  color: var(--text-main);
+  padding: 8px;
+}
