@@ -2,8 +2,9 @@ const projectId = session.projectId;
         const secretHash = session.get("secretHash");
         const scorerRole = session.scorerRole;
         if (!projectId || scorerRole !== 'admin') {
-            alert('管理者としてプロジェクトに入室してください');
-            location.href = 'index.html';
+            document.body.innerHTML = '<div style="padding:40px;text-align:center;color:#f87171;font-weight:bold;">管理者としてプロジェクトに入室してください。3秒後にトップページへ戻ります。</div>';
+            setTimeout(() => location.href = 'index.html', 3000);
+            return;
         }
 
         let answersData = {};

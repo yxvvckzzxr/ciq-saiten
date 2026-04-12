@@ -28,6 +28,39 @@ function showDbAuthError() {
             setTimeout(() => t.style.display = 'none', 3000);
         }
 
+        function showConfirm(message, confirmText = '削除する') {
+            return new Promise(resolve => {
+                const overlay = document.createElement('div');
+                overlay.style.position = 'fixed'; overlay.style.top = '0'; overlay.style.left = '0'; overlay.style.right = '0'; overlay.style.bottom = '0';
+                overlay.style.backgroundColor = 'rgba(15,23,42,0.8)'; overlay.style.zIndex = '10000';
+                overlay.style.display = 'flex'; overlay.style.alignItems = 'center'; overlay.style.justifyContent = 'center'; overlay.style.backdropFilter = 'blur(4px)';
+
+                const modal = document.createElement('div');
+                modal.className = 'glass-panel'; modal.style.width = '90%'; modal.style.maxWidth = '360px'; modal.style.padding = '24px'; modal.style.textAlign = 'center';
+
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid fa-triangle-exclamation'; icon.style.color = '#ef4444'; icon.style.fontSize = '32px'; icon.style.marginBottom = '16px'; icon.style.display = 'block';
+
+                const text = document.createElement('div');
+                text.style.marginBottom = '24px'; text.style.fontSize = '15px'; text.style.fontWeight = '600'; text.textContent = message;
+
+                const btns = document.createElement('div');
+                btns.style.display = 'flex'; btns.style.gap = '12px';
+
+                const btnCancel = document.createElement('button');
+                btnCancel.className = 'btn secondary'; btnCancel.textContent = 'キャンセル'; btnCancel.style.flex = '1';
+                btnCancel.onclick = () => { overlay.remove(); resolve(false); };
+
+                const btnOk = document.createElement('button');
+                btnOk.className = 'btn danger'; btnOk.textContent = confirmText; btnOk.style.flex = '1';
+                btnOk.onclick = () => { overlay.remove(); resolve(true); };
+
+                btns.appendChild(btnCancel); btns.appendChild(btnOk);
+                modal.appendChild(icon); modal.appendChild(text); modal.appendChild(btns);
+                overlay.appendChild(modal); document.body.appendChild(overlay);
+            });
+        }
+
         // ============================
         // 共通初期化
         // ============================
@@ -465,7 +498,7 @@ function showDbAuthError() {
                     <span class="entry-num-badge">#${num}</span>
                 `;
                 // チェック時のカードハイライト
-                const cb = card.querySelector('.entry-cb');
+                        const cb = card.querySelector('.entry-cb');
                 cb.addEventListener('change', () => {
                     card.classList.toggle('selected', cb.checked);
                     updateBatchBtn();
@@ -496,7 +529,7 @@ function showDbAuthError() {
         }
         async function deleteEntry(num, e) {
             e?.stopPropagation();
-            if (!confirm(`受付番号 ${num} の答案を削除しますか？`)) return;
+            if (!(await showConfirm(`受付番号 ${num} の答案を削除しますか？`))) return;
             await db.ref(`projects/${projectId}/protected/${secretHash}/answers/${num}`).remove();
             await db.ref(`projects/${projectId}/protected/${secretHash}/scores/${num}`).remove();
             loadEntryList();
@@ -504,7 +537,7 @@ function showDbAuthError() {
         async function batchDelete() {
             const checked = [...document.querySelectorAll('.entry-cb:checked')].map(cb => cb.dataset.num);
             if (!checked.length) return;
-            if (!confirm(`${checked.length}件の答案を削除しますか？`)) return;
+            if (!(await showConfirm(`${checked.length}件の答案を一括削除しますか？`))) return;
             const updates = {};
             checked.forEach(num => { updates[`projects/${projectId}/protected/${secretHash}/answers/${num}`] = null; updates[`projects/${projectId}/protected/${secretHash}/scores/${num}`] = null; });
             await db.ref('/').update(updates);

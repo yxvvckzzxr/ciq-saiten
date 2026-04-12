@@ -2,12 +2,8 @@ const params = new URLSearchParams(location.search);
     let projectId = params.get('pid');
 
     if (!projectId) {
-        projectId = prompt("プロジェクトIDを入力してください (URLにパラメータが設定されていません):");
-        if(projectId) {
-            history.replaceState(null, null, `?pid=${projectId}`);
-        } else {
-            document.getElementById('form-card').innerHTML = '<p style="text-align:center;color:#8e8ea0;">プロジェクトIDが不明です。正しいリンクからアクセスしてください。</p>';
-        }
+        document.getElementById('form-card').innerHTML = '<p style="text-align:center;color:#ef4444;font-weight:600;">プロジェクトIDが不明です。正しいURLからアクセスしてください。</p>';
+        throw new Error('No Project ID');
     }
 
     // 大会名を取得して表示
