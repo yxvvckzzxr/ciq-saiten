@@ -247,13 +247,17 @@ document.addEventListener('keydown', (e) => {
                 const vals = Object.values(qScores);
                 const corrects = vals.filter(v => v === 'correct').length;
                 const wrongs = vals.filter(v => v === 'wrong').length;
-                const holds = vals.filter(v => v === 'hold').length;
 
-                if ((corrects > 0 && wrongs > 0) || holds > 0) {
+                // 3票完全一致のみ自動確定。それ以外はコンフリクト（管理者判断待ち）
+                if (corrects === 3) {
+                    finals[entryNum] = 'correct';
+                } else if (wrongs === 3) {
+                    finals[entryNum] = 'wrong';
+                } else {
+                    // 意見が割れている → 自動確定しない
                     allAgree = false;
                     break;
                 }
-                finals[entryNum] = corrects >= wrongs ? 'correct' : 'wrong';
             }
 
             if (allAgree) {

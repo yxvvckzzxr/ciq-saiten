@@ -58,9 +58,9 @@ const projectId = session.projectId;
                     const entries = Object.entries(qScores);
                     const corrects = entries.filter(([, v]) => v === 'correct').length;
                     const wrongs = entries.filter(([, v]) => v === 'wrong').length;
-                    const holds = entries.filter(([, v]) => v === 'hold').length;
 
-                    if ((corrects > 0 && wrongs > 0) || holds > 0) {
+                    // 3票一致以外はすべてコンフリクト（管理者判断が必要）
+                    if (corrects !== 3 && wrongs !== 3) {
                         const finalResult = scoresData[`__final__q${q}`]?.[entryNum];
                         conflicts.push({ q, entryNum, qScores, finalResult });
                     }

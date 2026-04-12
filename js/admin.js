@@ -607,9 +607,9 @@ function showDbAuthError() {
                         const qs = scoresData[en]?.[`q${q}`] || {}; 
                         const v = Object.values(qs); 
                         const co = v.filter(x => x === 'correct').length, 
-                              wr = v.filter(x => x === 'wrong').length, 
-                              ho = v.filter(x => x === 'hold').length; 
-                        if ((co > 0 && wr > 0) || ho > 0) { 
+                              wr = v.filter(x => x === 'wrong').length; 
+                        // 3票一致以外はコンフリクト
+                        if (co !== 3 && wr !== 3) { 
                             hasConflict = true; 
                             if (!scoresData[`__final__q${q}`]?.[en]) allResolved = false; 
                         } 
@@ -672,7 +672,7 @@ function showDbAuthError() {
                 snap.forEach(c => { const v = c.val(); masterData[v.entryNumber] = { name: `${v.familyName} ${v.firstName}`, affiliation: v.affiliation, grade: v.grade }; });
             }
             const results = entryNumbers.map(en => {
-                const answers = []; for (let q = 1; q <= totalQuestions; q++) { const fd = scoresData[`__final__q${q}`] || {}; const qs = scoresData[en]?.[`q${q}`] || {}; let r; if (fd[en]) r = fd[en] === 'correct' ? 1 : 0; else { const v = Object.values(qs); r = v.filter(x => x === 'correct').length >= 2 ? 1 : 0; } answers.push(r); }
+                const answers = []; for (let q = 1; q <= totalQuestions; q++) { const fd = scoresData[`__final__q${q}`] || {}; const r = fd[en] === 'correct' ? 1 : 0; answers.push(r); }
                 const score = answers.reduce((a, b) => a + b, 0); const streaks = []; let cur = 0; answers.forEach(a => { if (a === 1) cur++; else { if (cur > 0) streaks.push(cur); cur = 0; } }); if (cur > 0) streaks.push(cur);
                 const m = masterData[en] || {}; return { entryNumber: en, name: m.name || '', affiliation: m.affiliation || '', grade: m.grade || '', score, answers, streaks };
             });
@@ -691,10 +691,21 @@ function showDbAuthError() {
             let masterData = {}; try { masterData = JSON.parse(localStorage.getItem(`masterData_${projectId}`) || '{}'); } catch (e) { }
             const tp = entryNumbers.length || 1, qStats = [];
             for (let q = 1; q <= totalQuestions; q++) {
-                let cc = 0, ce = []; entryNumbers.forEach(en => { const fd = scoresData[`__final__q${q}`] || {}; const qs = scoresData[en]?.[`q${q}`] || {}; let r; if (fd[en]) r = fd[en] === 'correct' ? 1 : 0; else { r = Object.values(qs).filter(v => v === 'correct').length >= 2 ? 1 : 0; } if (r === 1) { cc++; ce.push(en); } });
-                const rate = Math.round((cc / tp) * 100); const names = ce.map(e => { const m = masterData[e] || {}; return m.name ? `${m.affiliation || ''} ${m.name}`.trim() : `番号${e}`; }).join(' / ');
+                const fd = scoresData[`__final__q${q}`] || {};
+                // __final__ が空 = まだ確定していない → 未確定として扱う
+                const hasFinal = Object.keys(fd).length > 0;
+                if (!hasFinal) {
+                    qStats.push({ q, correctCount: '-', rate: '-', type: '未確定', names: '', isRare: false });
+                    continue;
+                }
+                let cc = 0, ce = [];
+                entryNumbers.forEach(en => {
+                    if (fd[en] === 'correct') { cc++; ce.push(en); }
+                });
+                const rate = Math.round((cc / tp) * 100);
+                const names = ce.map(e => { const m = masterData[e] || {}; return m.name ? `${m.affiliation || ''} ${m.name}`.trim() : `番号${e}`; }).join(' / ');
                 let type = ''; if (cc === 0) type = '全滅'; else if (cc === 1) type = '単独正解'; else if (cc <= threshold) type = '少数正解';
-                qStats.push({ q, correctCount: cc, rate, type, names, isRare: cc <= threshold });
+                qStats.push({ q, correctCount: cc, rate, type, names, isRare: cc <= threshold && cc > 0 });
             } return qStats;
         }
         async function renderAnalytics() {
@@ -882,21 +893,8 @@ function showDbAuthError() {
                     const results = {};
                     for (let q = 1; q <= totalQuestions; q++) {
                         const fd = scoresData[`__final__q${q}`] || {};
-                        const qs = scoresData[en]?.[`q${q}`] || {};
-                        let r = 'hold';
-                        if (fd[en]) { r = fd[en]; }
-                        else {
-                            const vals = Object.values(qs);
-                            const co = vals.filter(x => x === 'correct').length;
-                            const wr = vals.filter(x => x === 'wrong').length;
-                            const ho = vals.filter(x => x === 'hold').length;
-                            if (ho > 0 || (co > 0 && wr > 0)) {  }
-                            else if (co >= 2) r = 'correct';
-                            else if (wr >= 2) r = 'wrong';
-                            else if (co === 1) r = 'correct';
-                            else if (wr === 1) r = 'wrong';
-                        }
-                        results[`q${q}`] = r;
+                        // __final__ がある場合のみ確定結果を使用、なければ未確定(hold)
+                        results[`q${q}`] = fd[en] || 'hold';
                     }
                     const score = Object.values(results).filter(x => x === 'correct').length;
                     updates[`projects/${projectId}/protected/${secretHash}/disclosure/${en}`] = {
