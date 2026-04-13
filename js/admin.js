@@ -80,6 +80,17 @@
             dbSet(`projects/${projectId}/publicSettings/lastAccess`, SERVER_TIMESTAMP).catch(() => {});
             purgeOldImages();
 
+            // オンボーディングチェックリスト（セットアップ状況に応じて表示）
+            renderOnboarding();
+
+            // キーボードショートカット登録（管理画面固有）
+            KeyboardShortcuts.register('1', '参加者タブ', () => switchTab('tab-entries'));
+            KeyboardShortcuts.register('2', '採点準備タブ', () => switchTab('tab-prep'));
+            KeyboardShortcuts.register('3', '答案管理タブ', () => switchTab('tab-scan'));
+            KeyboardShortcuts.register('4', '集計タブ', () => switchTab('tab-stats'));
+            KeyboardShortcuts.register('5', '設定タブ', () => switchTab('tab-settings'));
+            KeyboardShortcuts.register('e', 'データエクスポート', () => exportProjectData());
+
             // リンクURL設定
             const lOrigins = window.location.origin + window.location.pathname.replace('admin.html', '');
             document.getElementById('entry-link').href = `${lOrigins}entry_list.html?pid=${projectId}`;
@@ -1304,6 +1315,64 @@
             } catch (e) {
                 showAdminToast('削除エラー: ' + e.message, 'error');
             }
+        }
+
+        async function renderOnboarding() {
+            // オンボーディング非表示設定チェック
+            if (localStorage.getItem(`onboarding_dismissed_${projectId}`)) return;
+
+            try {
+                const [config, answersKeys] = await Promise.all([
+                    dbGet(`projects/${projectId}/protected/${secretHash}/settings`),
+                    dbShallow(`projects/${projectId}/protected/${secretHash}/answers`)
+                ]);
+                const modelAnswers = await dbGet(`projects/${projectId}/config/answers`);
+                const entriesCount = await dbShallow(`projects/${projectId}/entries`);
+
+                const steps = [
+                    { id: 'entries',   label: 'エントリーを受け付ける', done: entriesCount && Object.keys(entriesCount).length > 0, tab: 'tab-entries' },
+                    { id: 'model',     label: '模範解答を登録する', done: modelAnswers && Object.keys(modelAnswers).length > 0, tab: 'tab-prep' },
+                    { id: 'answers',   label: '答案をアップロードする', done: answersKeys && Object.keys(answersKeys).length > 0, tab: 'tab-scan' },
+                ];
+
+                const doneCount = steps.filter(s => s.done).length;
+
+                // 全部完了していたら表示しない
+                if (doneCount >= steps.length) {
+                    localStorage.setItem(`onboarding_dismissed_${projectId}`, '1');
+                    return;
+                }
+
+                const container = document.querySelector('.admin-body');
+                const panel = document.createElement('div');
+                panel.className = 'onboarding-panel';
+                panel.id = 'onboarding-panel';
+                panel.innerHTML = `
+                    <h3><i class="fa-solid fa-rocket"></i> セットアップガイド</h3>
+                    <div class="onboarding-desc">大会の準備を進めましょう。完了した項目は自動的にチェックされます。</div>
+                    <div class="onboarding-progress"><div class="onboarding-progress-bar" style="width:${(doneCount / steps.length) * 100}%"></div></div>
+                    <ul class="onboarding-steps">
+                        ${steps.map(s => `
+                            <li class="onboarding-step ${s.done ? 'done' : ''}">
+                                <div class="step-icon">${s.done ? '<i class="fa-solid fa-check"></i>' : ''}</div>
+                                <span class="step-label">${s.label}</span>
+                                ${!s.done ? `<span class="step-action" onclick="switchTab('${s.tab}')">設定 →</span>` : ''}
+                            </li>
+                        `).join('')}
+                    </ul>
+                    <span class="onboarding-dismiss" onclick="dismissOnboarding()">× このガイドを閉じる</span>
+                `;
+                const tabs = container.querySelector('.tabs');
+                container.insertBefore(panel, tabs);
+            } catch(e) {
+                console.warn('Onboarding check failed:', e);
+            }
+        }
+
+        function dismissOnboarding() {
+            localStorage.setItem(`onboarding_dismissed_${projectId}`, '1');
+            const panel = document.getElementById('onboarding-panel');
+            if (panel) { panel.style.transition = 'all 0.3s ease'; panel.style.opacity = '0'; panel.style.transform = 'translateY(-10px)'; setTimeout(() => panel.remove(), 300); }
         }
 
         init();

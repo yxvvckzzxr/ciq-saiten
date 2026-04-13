@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="description" content="QuizOpus - ページが見つかりません">
+    <title>QuizOpus - 404</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="css/design_system.css">
+    <style>
+        body {
+            display: flex; align-items: center; justify-content: center;
+            min-height: 100vh; padding: 20px; text-align: center;
+        }
+        .error-container { max-width: 480px; }
+        .error-code {
+            font-size: 120px; font-weight: 800; line-height: 1;
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            margin-bottom: 8px; animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .error-title {
+            font-size: 22px; font-weight: 700; margin-bottom: 12px;
+        }
+        .error-desc {
+            color: var(--text-muted); font-size: 14px; line-height: 1.7;
+            margin-bottom: 32px;
+        }
+        .error-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .error-actions .btn { width: auto; padding: 12px 24px; font-size: 14px; }
+        .btn.ghost {
+            background: transparent; border: 1px solid rgba(255,255,255,0.15);
+            color: var(--text-main);
+        }
+        .btn.ghost:hover {
+            background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.25);
+        }
+        .decoration {
+            font-size: 64px; margin-bottom: 24px; opacity: 0.15;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="decoration"><i class="fa-solid fa-ghost"></i></div>
+        <div class="error-code">404</div>
+        <h1 class="error-title">ページが見つかりません</h1>
+        <p class="error-desc">
+            お探しのページは移動または削除された可能性があります。<br>
+            URLが正しいかご確認ください。
+        </p>
+        <div class="error-actions">
+            <a href="index.html" class="btn"><i class="fa-solid fa-home"></i> トップへ戻る</a>
+            <a href="javascript:history.back()" class="btn ghost"><i class="fa-solid fa-arrow-left"></i> 前のページへ</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -495,3 +495,161 @@ function showConfirm(message, confirmText = '削除する') {
         overlay.querySelector('.confirm-ok').focus();
     });
 }
+
+// ============================================
+//  オフライン/オンライン検知
+//  ネット断を即座に検知し、復帰後に自動回復
+// ============================================
+
+const ConnectionMonitor = {
+    _offlineBanner: null,
+    _onlineBanner: null,
+    _wasOffline: false,
+
+    init() {
+        // バナー要素を生成
+        this._offlineBanner = document.createElement('div');
+        this._offlineBanner.className = 'offline-banner';
+        this._offlineBanner.innerHTML = '<i class="fa-solid fa-wifi"></i> インターネット接続が切断されました';
+        document.body.appendChild(this._offlineBanner);
+
+        this._onlineBanner = document.createElement('div');
+        this._onlineBanner.className = 'online-banner';
+        this._onlineBanner.innerHTML = '<i class="fa-solid fa-check-circle"></i> 接続が回復しました';
+        document.body.appendChild(this._onlineBanner);
+
+        window.addEventListener('offline', () => this._goOffline());
+        window.addEventListener('online', () => this._goOnline());
+
+        // 初期状態チェック
+        if (!navigator.onLine) this._goOffline();
+    },
+
+    _goOffline() {
+        this._wasOffline = true;
+        this._offlineBanner.classList.add('visible');
+        this._onlineBanner.classList.remove('visible');
+    },
+
+    _goOnline() {
+        this._offlineBanner.classList.remove('visible');
+        if (this._wasOffline) {
+            this._onlineBanner.classList.add('visible');
+            setTimeout(() => this._onlineBanner.classList.remove('visible'), 3000);
+            // ポーラーを再起動してデータを即座に同期
+            if (typeof IdleManager !== 'undefined' && IdleManager._pollers) {
+                IdleManager._pollers.forEach(p => { if (p._active) p.restart(); });
+            }
+        }
+    }
+};
+
+// ============================================
+//  キーボードショートカット
+//  ? でヘルプ表示。各ページでショートカットを追加登録可能。
+// ============================================
+
+const KeyboardShortcuts = {
+    _shortcuts: [],
+    _modalEl: null,
+
+    /**
+     * ショートカット登録
+     * @param {string} key - キー ('?' 'g' 'Escape' など)
+     * @param {string} description - 説明
+     * @param {function} handler - コールバック
+     * @param {object} opts - { ctrl, shift, alt }
+     */
+    register(key, description, handler, opts = {}) {
+        this._shortcuts.push({ key, description, handler, ...opts });
+    },
+
+    init() {
+        // デフォルト: ? でヘルプ表示
+        this.register('?', 'ショートカット一覧を表示', () => this.toggleHelp(), { shift: true });
+        this.register('Escape', 'モーダルを閉じる', () => this._closeHelp());
+
+        document.addEventListener('keydown', (e) => {
+            // 入力中は無視
+            const tag = e.target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable) return;
+
+            for (const s of this._shortcuts) {
+                const keyMatch = e.key === s.key || e.key.toLowerCase() === s.key.toLowerCase();
+                const ctrlMatch = !s.ctrl || (e.ctrlKey || e.metaKey);
+                const shiftMatch = !s.shift || e.shiftKey;
+                const altMatch = !s.alt || e.altKey;
+                if (keyMatch && ctrlMatch && shiftMatch && altMatch) {
+                    e.preventDefault();
+                    s.handler();
+                    return;
+                }
+            }
+        });
+    },
+
+    toggleHelp() {
+        if (this._modalEl) { this._closeHelp(); return; }
+        const backdrop = document.createElement('div');
+        backdrop.className = 'kbd-modal-backdrop';
+        backdrop.innerHTML = `
+            <div class="kbd-modal">
+                <h3><i class="fa-solid fa-keyboard"></i> キーボードショートカット</h3>
+                ${this._shortcuts
+                    .filter(s => s.key !== 'Escape')
+                    .map(s => `
+                        <div class="kbd-row">
+                            <span>${s.description}</span>
+                            <span>${s.shift ? '<kbd>Shift</kbd> + ' : ''}${s.ctrl ? '<kbd>Ctrl</kbd> + ' : ''}<kbd>${s.key}</kbd></span>
+                        </div>
+                    `).join('')}
+            </div>
+        `;
+        backdrop.addEventListener('click', e => { if (e.target === backdrop) this._closeHelp(); });
+        document.body.appendChild(backdrop);
+        requestAnimationFrame(() => backdrop.classList.add('visible'));
+        this._modalEl = backdrop;
+    },
+
+    _closeHelp() {
+        if (!this._modalEl) return;
+        this._modalEl.classList.remove('visible');
+        setTimeout(() => { this._modalEl?.remove(); this._modalEl = null; }, 200);
+    }
+};
+
+// ============================================
+//  スケルトンローダー生成ユーティリティ
+// ============================================
+
+function renderSkeleton(container, rows = 5) {
+    container.innerHTML = Array.from({ length: rows }, () => `
+        <div class="skeleton-row">
+            <div class="skeleton skeleton-avatar"></div>
+            <div style="flex:1">
+                <div class="skeleton skeleton-text"></div>
+                <div class="skeleton skeleton-text short"></div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function renderSkeletonCards(container, count = 6) {
+    container.innerHTML = Array.from({ length: count }, () =>
+        '<div class="skeleton skeleton-card"></div>'
+    ).join('');
+}
+
+// ============================================
+//  自動初期化
+// ============================================
+
+document.addEventListener('DOMContentLoaded', () => {
+    ConnectionMonitor.init();
+    KeyboardShortcuts.init();
+
+    // Service Worker 登録（HTTPS環境のみ）
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+    }
+});
