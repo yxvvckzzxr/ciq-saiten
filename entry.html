@@ -51,20 +51,25 @@
         }
         .checkbox-label input[type="checkbox"] { margin-top: 2px; }
 
-        .page-msg.info { background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); color: #60a5fa; }
-
         .result-info-box {
             background: rgba(15, 23, 42, 0.6); padding: 24px;
             border-radius: var(--radius-md); margin-bottom: 24px;
             border: 1px solid var(--glass-border);
+            position: relative;
+        }
+        .result-info-box::before {
+            content: ''; position: absolute; top: -1px; left: 20%; right: 20%; height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(16,185,129,0.5), transparent);
+            border-radius: 2px;
         }
         .result-info-box .info-label { color: var(--text-muted); font-size: 12px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
-        .result-info-box .info-value { font-size: 32px; font-weight: 800; color: var(--primary); margin-bottom: 16px; }
+        .result-info-box .info-value { font-size: 36px; font-weight: 800; color: var(--primary); margin-bottom: 16px; }
         .pw-display {
-            font-size: 22px; font-family: 'Courier New', monospace; letter-spacing: 4px; font-weight: bold;
-            background: rgba(0,0,0,0.3); padding: 10px 16px; border-radius: var(--radius-sm); color: var(--text-main);
+            font-size: 24px; font-family: 'Courier New', monospace; letter-spacing: 6px; font-weight: bold;
+            background: rgba(0,0,0,0.4); padding: 12px 20px; border-radius: var(--radius-md);
+            color: var(--text-main); border: 1px solid rgba(255,255,255,0.06);
         }
-        .pw-warning { color: #f87171; font-size: 12px; font-weight: 700; margin-top: 12px; }
+        .pw-warning { color: #f87171; font-size: 12px; font-weight: 700; margin-top: 14px; line-height: 1.5; }
     </style>
 </head>
 
@@ -76,10 +81,10 @@
             <div class="logo-sub" id="project-subtitle">エントリーフォーム</div>
         </div>
 
-        <div class="page-card" id="disabled-card" style="display:none;text-align:center;padding:40px 28px">
-            <i class="fa-solid fa-door-closed" style="font-size:40px;display:block;margin-bottom:16px;color:var(--text-muted)"></i>
-            <h2 id="disabled-title" style="margin-bottom:12px;font-size:18px">受付は現在停止中です</h2>
-            <p id="disabled-detail" style="color:var(--text-muted);font-size:14px;line-height:1.6">管理者が受付を再開するまでお待ちください。</p>
+        <div class="page-card page-disabled" id="disabled-card" style="display:none">
+            <i class="fa-solid fa-door-closed"></i>
+            <h2 id="disabled-title">受付は現在停止中です</h2>
+            <p id="disabled-detail">管理者が受付を再開するまでお待ちください。</p>
         </div>
 
         <div class="page-card" id="form-card">
@@ -114,22 +119,49 @@
                     </div>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group" style="flex:2">
-                        <label class="required"><i class="fa-solid fa-school"></i> 所属教育機関</label>
-                        <input type="text" id="f-affiliation" required placeholder="○○大">
+                <div id="affiliation-section">
+                    <!-- デフォルト: 学校限定モード -->
+                    <div class="form-row" id="school-mode-fields">
+                        <div class="form-group" style="flex:2">
+                            <label class="required"><i class="fa-solid fa-school"></i> 所属教育機関</label>
+                            <input type="text" id="f-affiliation" required placeholder="○○大">
+                        </div>
+                        <div class="form-group" style="flex:1">
+                            <label class="required"><i class="fa-solid fa-graduation-cap"></i> 学年</label>
+                            <select id="f-grade" class="custom-select" required>
+                                <option value="">選択</option>
+                                <option value="１年">１年</option>
+                                <option value="２年">２年</option>
+                                <option value="３年">３年</option>
+                                <option value="４年">４年</option>
+                                <option value="５年">５年</option>
+                                <option value="６年">６年</option>
+                                <option value="非表示">非表示</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="form-group" style="flex:1">
-                        <label class="required"><i class="fa-solid fa-graduation-cap"></i> 学年</label>
-                        <select id="f-grade" class="custom-select" required>
-                            <option value="">選択</option>
-                            <option value="１年">１年</option>
-                            <option value="２年">２年</option>
-                            <option value="３年">３年</option>
-                            <option value="４年">４年</option>
-                            <option value="５年">５年</option>
-                            <option value="６年">６年</option>
-                            <option value="非表示">非表示</option>
+                    <!-- フルオープンモード用（非表示） -->
+                    <div class="form-group" id="open-mode-fields" style="display:none">
+                        <label class="required"><i class="fa-solid fa-map-location-dot"></i> 都道府県</label>
+                        <select id="f-prefecture" class="custom-select">
+                            <option value="">選択してください</option>
+                            <option value="北海道">北海道</option><option value="青森県">青森県</option><option value="岩手県">岩手県</option>
+                            <option value="宮城県">宮城県</option><option value="秋田県">秋田県</option><option value="山形県">山形県</option>
+                            <option value="福島県">福島県</option><option value="茨城県">茨城県</option><option value="栃木県">栃木県</option>
+                            <option value="群馬県">群馬県</option><option value="埼玉県">埼玉県</option><option value="千葉県">千葉県</option>
+                            <option value="東京都">東京都</option><option value="神奈川県">神奈川県</option><option value="新潟県">新潟県</option>
+                            <option value="富山県">富山県</option><option value="石川県">石川県</option><option value="福井県">福井県</option>
+                            <option value="山梨県">山梨県</option><option value="長野県">長野県</option><option value="岐阜県">岐阜県</option>
+                            <option value="静岡県">静岡県</option><option value="愛知県">愛知県</option><option value="三重県">三重県</option>
+                            <option value="滋賀県">滋賀県</option><option value="京都府">京都府</option><option value="大阪府">大阪府</option>
+                            <option value="兵庫県">兵庫県</option><option value="奈良県">奈良県</option><option value="和歌山県">和歌山県</option>
+                            <option value="鳥取県">鳥取県</option><option value="島根県">島根県</option><option value="岡山県">岡山県</option>
+                            <option value="広島県">広島県</option><option value="山口県">山口県</option><option value="徳島県">徳島県</option>
+                            <option value="香川県">香川県</option><option value="愛媛県">愛媛県</option><option value="高知県">高知県</option>
+                            <option value="福岡県">福岡県</option><option value="佐賀県">佐賀県</option><option value="長崎県">長崎県</option>
+                            <option value="熊本県">熊本県</option><option value="大分県">大分県</option><option value="宮崎県">宮崎県</option>
+                            <option value="鹿児島県">鹿児島県</option><option value="沖縄県">沖縄県</option>
+                            <option value="海外">海外</option>
                         </select>
                     </div>
                 </div>
@@ -164,9 +196,9 @@
             <div class="page-msg" id="status-msg"></div>
         </div>
 
-        <div class="page-card" id="result-card" style="display:none; text-align:center;">
-            <h2 style="color: #34d399; margin-bottom: 16px;"><i class="fa-solid fa-circle-check"></i> エントリー完了！</h2>
-            <p style="margin-bottom: 24px; color: var(--text-muted);">以下の情報で受付いたしました。<br>メールアドレスにも同じ情報をお送りしています。</p>
+        <div class="page-card result-card" id="result-card" style="display:none">
+            <h2 class="result-title"><i class="fa-solid fa-circle-check"></i> エントリー完了！</h2>
+            <p class="result-desc">以下の情報で受付いたしました。<br>メールアドレスにも同じ情報をお送りしています。</p>
 
             <div class="result-info-box">
                 <div class="info-label"><i class="fa-solid fa-hashtag"></i> あなたの受付番号</div>

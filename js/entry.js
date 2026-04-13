@@ -47,8 +47,13 @@ const params = new URLSearchParams(location.search);
             const firstName = document.getElementById('f-first-name').value.trim();
             const familyNameKana = document.getElementById('f-family-kana').value.trim();
             const firstNameKana = document.getElementById('f-first-kana').value.trim();
-            const affiliation = document.getElementById('f-affiliation').value.trim();
-            const grade = document.getElementById('f-grade').value;
+
+            // フルオープンモード: 都道府県 → affiliation に格納、grade は空
+            const isFullOpen = document.getElementById('open-mode-fields').style.display !== 'none';
+            const affiliation = isFullOpen
+                ? document.getElementById('f-prefecture').value
+                : document.getElementById('f-affiliation').value.trim();
+            const grade = isFullOpen ? '' : document.getElementById('f-grade').value;
             const entryName = document.getElementById('f-entry-name').value.trim();
             const message = document.getElementById('f-message').value.trim();
             const inquiry = document.getElementById('f-inquiry').value.trim();
@@ -138,6 +143,15 @@ const params = new URLSearchParams(location.search);
                     const pName = settings.projectName || 'エントリーフォーム';
                     document.getElementById('project-title').textContent = pName;
                     document.title = pName + ' - エントリーフォーム';
+
+                    // フルオープンモード検出 → フォーム切替
+                    if (settings.fullOpen) {
+                        document.getElementById('school-mode-fields').style.display = 'none';
+                        document.getElementById('f-affiliation').removeAttribute('required');
+                        document.getElementById('f-grade').removeAttribute('required');
+                        document.getElementById('open-mode-fields').style.display = 'block';
+                        document.getElementById('f-prefecture').setAttribute('required', 'required');
+                    }
 
                     // エントリー受付チェック
                     let blocked = false;

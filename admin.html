@@ -27,13 +27,13 @@
         .admin-container { width: 100%; margin: 0 auto; }
 
         .admin-body { margin-top: 60px; padding: 24px; }
-        .tabs { display: flex; gap: 4px; margin-bottom: 24px; overflow-x: auto; padding: 4px; background: rgba(15,23,42,0.5); border-radius: var(--radius-md); border: 1px solid var(--glass-border); }
-        .tab-btn { padding: 10px 14px; background: transparent; border: none; color: var(--text-muted); font-size: 13px; font-weight: 600; cursor: pointer; border-radius: var(--radius-sm); transition: all 0.2s; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; }
-        .tab-btn.active { color: white; background: rgba(59,130,246,0.2); }
-        .tab-btn:hover:not(.active) { color: var(--text-main); background: rgba(255,255,255,0.05); }
+        .tabs { display: flex; gap: 2px; margin-bottom: 24px; overflow-x: auto; padding: 4px; background: rgba(15,23,42,0.6); border-radius: var(--radius-md); border: 1px solid var(--glass-border); }
+        .tab-btn { padding: 10px 16px; background: transparent; border: none; color: #64748b; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 8px; transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1); white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; position: relative; }
+        .tab-btn.active { color: white; background: linear-gradient(135deg, rgba(59,130,246,0.25), rgba(99,102,241,0.2)); box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 0 12px rgba(59,130,246,0.15); }
+        .tab-btn:hover:not(.active) { color: #94a3b8; background: rgba(255,255,255,0.04); }
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .tab-content.active { display: block; animation: tabSlideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1); }
+        @keyframes tabSlideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
 
         .section { margin-bottom: 24px; }
         .section h2 { font-size: 15px; color: var(--text-main); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
@@ -484,6 +484,17 @@
                 <div class="name-input-flex">
                     <input type="text" id="setting-project-name" placeholder="プロジェクト名を入力" />
                     <button class="btn" style="width:auto;padding:10px 20px;" onclick="updateProjectName()"><i class="fa-solid fa-arrows-rotate"></i> 更新</button>
+                </div>
+            </div>
+            <div class="section glass-panel">
+                <h2><i class="fa-solid fa-earth-asia"></i> 大会形式</h2>
+                <div class="config-panel config-row">
+                    <label class="toggle-switch"><input type="checkbox" id="full-open-toggle" onchange="toggleFullOpen()"><span class="toggle-slider"></span></label>
+                    <div class="toggle-info">
+                        <div class="toggle-info-title">フルオープン大会モード</div>
+                        <div class="toggle-info-desc">ONにすると、エントリーフォームの「所属教育機関・学年」が「都道府県」に変わります</div>
+                    </div>
+                    <span id="full-open-status" class="status-badge status-closed">学校限定</span>
                 </div>
             </div>
             <div class="section glass-panel">

@@ -641,6 +641,155 @@ function renderSkeletonCards(container, count = 6) {
 }
 
 // ============================================
+//  インタラクティブチュートリアル (TourGuide)
+//  ステップバイステップでUI要素をハイライトしてガイド
+// ============================================
+
+class TourGuide {
+    /**
+     * @param {string} tourId - ツアー識別子（ localStorage 保存用）
+     * @param {Array<{selector: string, title: string, text: string, position?: string}>} steps
+     */
+    constructor(tourId, steps) {
+        this.tourId = tourId;
+        this.steps = steps;
+        this.currentStep = 0;
+        this._backdrop = null;
+        this._spotlight = null;
+        this._tooltip = null;
+    }
+
+    /** 未完了の場合に自動開始 */
+    autoStart(delay = 1000) {
+        if (localStorage.getItem(`tour_${this.tourId}`)) return;
+        setTimeout(() => this.start(), delay);
+    }
+
+    start() {
+        this.currentStep = 0;
+        this._createOverlay();
+        this._showStep();
+    }
+
+    _createOverlay() {
+        // 背景オーバーレイ
+        this._backdrop = document.createElement('div');
+        Object.assign(this._backdrop.style, {
+            position: 'fixed', inset: '0', zIndex: '99980',
+            background: 'rgba(0,0,0,0.65)', transition: 'opacity 0.3s',
+        });
+        document.body.appendChild(this._backdrop);
+
+        // スポットライト穴
+        this._spotlight = document.createElement('div');
+        Object.assign(this._spotlight.style, {
+            position: 'fixed', zIndex: '99981',
+            border: '3px solid #3b82f6', borderRadius: '12px',
+            boxShadow: '0 0 0 99999px rgba(0,0,0,0.65), 0 0 30px rgba(59,130,246,0.5)',
+            transition: 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+            pointerEvents: 'none',
+        });
+        document.body.appendChild(this._spotlight);
+
+        // ツールチップ
+        this._tooltip = document.createElement('div');
+        Object.assign(this._tooltip.style, {
+            position: 'fixed', zIndex: '99982',
+            background: '#1e293b', border: '1px solid rgba(255,255,255,0.15)',
+            borderRadius: '14px', padding: '20px 24px',
+            maxWidth: '340px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+            color: '#f8fafc', fontFamily: "'Inter','Noto Sans JP',sans-serif",
+            transition: 'all 0.4s cubic-bezier(0.22, 1, 0.36, 1)',
+            opacity: '0', transform: 'translateY(8px)',
+        });
+        document.body.appendChild(this._tooltip);
+
+        // ESCで終了
+        this._escHandler = (e) => { if (e.key === 'Escape') this.end(); };
+        document.addEventListener('keydown', this._escHandler);
+    }
+
+    _showStep() {
+        const step = this.steps[this.currentStep];
+        if (!step) { this.end(); return; }
+
+        const el = document.querySelector(step.selector);
+        if (!el) { this.next(); return; }
+
+        // 要素をスクロールして表示
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        setTimeout(() => {
+            const rect = el.getBoundingClientRect();
+            const pad = 8;
+
+            // スポットライト位置
+            Object.assign(this._spotlight.style, {
+                top: (rect.top - pad) + 'px',
+                left: (rect.left - pad) + 'px',
+                width: (rect.width + pad * 2) + 'px',
+                height: (rect.height + pad * 2) + 'px',
+            });
+
+            // ツールチップ構築
+            const stepNum = this.currentStep + 1;
+            const total = this.steps.length;
+            this._tooltip.innerHTML = `
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                    <span style="background:rgba(59,130,246,0.15);color:#60a5fa;font-size:11px;font-weight:700;padding:3px 10px;border-radius:12px;">${stepNum} / ${total}</span>
+                </div>
+                <div style="font-size:15px;font-weight:700;margin-bottom:6px;">${step.title}</div>
+                <div style="font-size:13px;color:#94a3b8;line-height:1.6;margin-bottom:16px;">${step.text}</div>
+                <div style="display:flex;gap:8px;justify-content:flex-end;">
+                    <button class="tour-skip" style="padding:8px 16px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:transparent;color:#94a3b8;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">スキップ</button>
+                    <button class="tour-next" style="padding:8px 20px;border-radius:8px;border:none;background:#3b82f6;color:white;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit;">${stepNum === total ? '完了' : '次へ →'}</button>
+                </div>
+            `;
+
+            // ツールチップ位置（要素の下 or 上）
+            const pos = step.position || 'bottom';
+            if (pos === 'bottom' || rect.top < 200) {
+                Object.assign(this._tooltip.style, {
+                    top: (rect.bottom + pad + 12) + 'px',
+                    left: Math.max(16, Math.min(rect.left, window.innerWidth - 360)) + 'px',
+                });
+            } else {
+                Object.assign(this._tooltip.style, {
+                    top: (rect.top - pad - 12 - this._tooltip.offsetHeight) + 'px',
+                    left: Math.max(16, Math.min(rect.left, window.innerWidth - 360)) + 'px',
+                });
+            }
+
+            this._tooltip.style.opacity = '1';
+            this._tooltip.style.transform = 'translateY(0)';
+
+            // ボタンイベント
+            this._tooltip.querySelector('.tour-skip').onclick = () => this.end();
+            this._tooltip.querySelector('.tour-next').onclick = () => this.next();
+        }, 300);
+    }
+
+    next() {
+        this.currentStep++;
+        if (this.currentStep >= this.steps.length) {
+            this.end();
+        } else {
+            this._tooltip.style.opacity = '0';
+            this._tooltip.style.transform = 'translateY(8px)';
+            setTimeout(() => this._showStep(), 200);
+        }
+    }
+
+    end() {
+        localStorage.setItem(`tour_${this.tourId}`, '1');
+        document.removeEventListener('keydown', this._escHandler);
+        [this._backdrop, this._spotlight, this._tooltip].forEach(el => {
+            if (el) { el.style.opacity = '0'; setTimeout(() => el.remove(), 300); }
+        });
+    }
+}
+
+// ============================================
 //  自動初期化
 // ============================================
 
