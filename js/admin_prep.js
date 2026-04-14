@@ -193,11 +193,7 @@
                         }
                     }
 
-                    console.log('DEBUG scanConfig keys:', Object.keys(scanConfig));
-                    console.log('DEBUG tombo:', scanConfig.tombo);
-                    console.log('DEBUG markCells:', scanConfig.markCells);
-                    console.log('DEBUG answerRegions:', scanConfig.answerRegions);
-                    console.log('DEBUG detectedResult:', detectedResult);
+
                     const transform = calcPerspectiveTransform(scanConfig.tombo.map(r => ({ x: r.x + r.w / 2, y: r.y + r.h / 2 })), detectedResult.points);
                     const entryNumber = readEntryNumber(scanConfig.markCells.map(cell => transformRegion(cell, transform)));
                     const cells = [];
@@ -220,16 +216,26 @@
                     if (storage) {
                         try {
                             // ページ全体画像
+                            console.log(`[Upload] Entry ${a.entryNumber}: ページ画像アップロード開始 (${(a.pageImage.length / 1024).toFixed(0)}KB)`);
                             const pageRef = storage.ref(`projects/${projectId}/answers/${a.entryNumber}/pageImage`);
-                            const pageSnap = await pageRef.putString(a.pageImage, 'data_url');
+                            const pageSnap = await Promise.race([
+                                pageRef.putString(a.pageImage, 'data_url'),
+                                new Promise((_, reject) => setTimeout(() => reject(new Error('ページ画像アップロードが30秒でタイムアウト')), 30000))
+                            ]);
+                            console.log(`[Upload] Entry ${a.entryNumber}: ページ画像完了、URL取得中...`);
                             pageImageUrl = await pageSnap.ref.getDownloadURL();
+                            console.log(`[Upload] Entry ${a.entryNumber}: URL取得完了`);
 
                             // セル画像（各問題）
                             for (const c of a.cells) {
                                 const cellRef = storage.ref(`projects/${projectId}/answers/${a.entryNumber}/cells/q${c.q}`);
-                                const cellSnap = await cellRef.putString(c.imageData, 'data_url');
+                                const cellSnap = await Promise.race([
+                                    cellRef.putString(c.imageData, 'data_url'),
+                                    new Promise((_, reject) => setTimeout(() => reject(new Error(`q${c.q}アップロードが30秒でタイムアウト`)), 30000))
+                                ]);
                                 cellUrls[`q${c.q}`] = await cellSnap.ref.getDownloadURL();
                             }
+                            console.log(`[Upload] Entry ${a.entryNumber}: 全セル完了`);
                         } catch (e) {
                             console.error('Storage upload error:', e);
                             showAdminToast(`受付番号 ${a.entryNumber}: 画像アップロード失敗 — Firebase Storage を有効にしてください`, 'error');
