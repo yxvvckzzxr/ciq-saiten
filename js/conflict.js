@@ -60,17 +60,32 @@ const { projectId, secretHash } = auth;
                 });
             }
 
-            // 画像の必要部分だけダイナミックに一括取得 (REST)
+            // ページ画像キャッシュ
+            const pageImageCache = new Map();
+            async function loadPageImage(url) {
+                if (pageImageCache.has(url)) return pageImageCache.get(url);
+                const p = new Promise((resolve, reject) => {
+                    const img = new Image(); img.crossOrigin = 'anonymous';
+                    img.onload = () => resolve(img); img.onerror = reject;
+                    img.src = url;
+                });
+                pageImageCache.set(url, p);
+                return p;
+            }
+
             const promises = conflicts.map(async c => {
                 if (!answersData[c.entryNum]) answersData[c.entryNum] = { cells: {} };
                 if (answersData[c.entryNum].cells[`q${c.q}`] === undefined) {
                     const ansData = await dbGet(`projects/${projectId}/protected/${secretHash}/answers/${c.entryNum}`);
                     const region = ansData?.cellRegions?.[`q${c.q}`];
                     if (region && ansData?.pageImageUrl) {
-                        answersData[c.entryNum].cells[`q${c.q}`] = {
-                            type: 'crop', url: ansData.pageImageUrl,
-                            x: region.x, y: region.y, w: region.w, h: region.h
-                        };
+                        try {
+                            const img = await loadPageImage(ansData.pageImageUrl);
+                            const cv = document.createElement('canvas');
+                            cv.width = region.w; cv.height = region.h;
+                            cv.getContext('2d').drawImage(img, region.x, region.y, region.w, region.h, 0, 0, region.w, region.h);
+                            answersData[c.entryNum].cells[`q${c.q}`] = cv.toDataURL('image/webp', 0.8);
+                        } catch (e) { answersData[c.entryNum].cells[`q${c.q}`] = null; }
                     } else {
                         const cellUrl = ansData?.cellUrls?.[`q${c.q}`] || ansData?.cells?.[`q${c.q}`] || null;
                         answersData[c.entryNum].cells[`q${c.q}`] = cellUrl;
@@ -118,17 +133,8 @@ const { projectId, secretHash } = auth;
                     return '';
                 }).join(' ');
 
-                let imgHtml;
-                if (imageData?.type === 'crop') {
-                    imgHtml = `<div class="cell-crop" style="overflow:hidden;max-height:120px">
-                        <img src="${imageData.url}" alt="${displayName} ${q}問" loading="lazy"
-                             style="margin-left:${-imageData.x}px;margin-top:${-imageData.y}px;max-width:none;display:block" />
-                    </div>`;
-                } else {
-                    imgHtml = `<img src="${imageData || ''}" alt="${displayName} ${q}問" loading="lazy" />`;
-                }
                 card.innerHTML = `
-                  ${imgHtml}
+                  <img src="${imageData || ''}" alt="${displayName} ${q}問" loading="lazy" />
                   <div class="q-tag-badge">${q}問</div>
                   ${modelAnswer ? `<div class="model-ans-badge" title="${modelAnswer}">${modelAnswer}</div>` : ''}
                   <div class="entry-num">${displayName}</div>

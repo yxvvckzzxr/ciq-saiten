@@ -34,19 +34,36 @@ const currentQ = parseInt(localStorage.getItem('current_q') || '1');
                 return;
             }
 
+            // ページ画像キャッシュ（同じURLを何度もDLしない）
+            const pageImageCache = new Map();
+            async function loadPageImage(url) {
+                if (pageImageCache.has(url)) return pageImageCache.get(url);
+                const p = new Promise((resolve, reject) => {
+                    const img = new Image(); img.crossOrigin = 'anonymous';
+                    img.onload = () => resolve(img); img.onerror = reject;
+                    img.src = url;
+                });
+                pageImageCache.set(url, p);
+                return p;
+            }
+
             // 現在の設問の画像のみを並列取得 (REST)
             const fetchPromises = entryNumbers.map(async (entryNum) => {
                 const cellData = await dbGet(`projects/${projectId}/protected/${secretHash}/answers/${entryNum}`);
                 if (!answers[entryNum]) answers[entryNum] = { cells: {} };
 
-                // 新方式: ページ画像URL + CSSクロップ座標（canvasクロップ不要）
+                // 新方式: ページ画像からcanvasクロップ（画像はキャッシュ済み）
                 const region = cellData?.cellRegions?.[`q${currentQ}`];
                 if (region && cellData?.pageImageUrl) {
-                    answers[entryNum].cells[`q${currentQ}`] = {
-                        type: 'crop',
-                        url: cellData.pageImageUrl,
-                        x: region.x, y: region.y, w: region.w, h: region.h
-                    };
+                    try {
+                        const img = await loadPageImage(cellData.pageImageUrl);
+                        const c = document.createElement('canvas');
+                        c.width = region.w; c.height = region.h;
+                        c.getContext('2d').drawImage(img, region.x, region.y, region.w, region.h, 0, 0, region.w, region.h);
+                        answers[entryNum].cells[`q${currentQ}`] = c.toDataURL('image/webp', 0.8);
+                    } catch (e) {
+                        console.warn(`Entry ${entryNum}: セルクロップ失敗`, e);
+                    }
                 } else {
                     // 旧方式フォールバック: cellUrls または Base64
                     const cellUrl = cellData?.cellUrls?.[`q${currentQ}`] || cellData?.cells?.[`q${currentQ}`];
@@ -134,20 +151,10 @@ const currentQ = parseInt(localStorage.getItem('current_q') || '1');
 
                     const card = document.createElement('div');
                     card.className = `answer-card ${myScore === 'correct' ? 'correct' : myScore === 'wrong' ? 'wrong' : myScore === 'hold' ? 'hold' : ''} ${idx === selectedIndex ? 'selected' : ''}`;
-
-                    // CSSクロップ方式 vs 旧方式(データURL)
-                    let imgHtml;
-                    if (imageData?.type === 'crop') {
-                        // overflow:hidden の div でクロップ。画像はネイティブサイズで配置し、marginで位置調整
-                        imgHtml = `<div class="cell-crop" style="overflow:hidden;max-height:120px">
-                            <img src="${imageData.url}" alt="${displayName}" loading="lazy"
-                                 style="margin-left:${-imageData.x}px;margin-top:${-imageData.y}px;max-width:none;display:block" />
-                        </div>`;
-                    } else {
-                        imgHtml = `<img src="${imageData || ''}" alt="${displayName}" loading="lazy" />`;
-                    }
-
-                    card.innerHTML = `${imgHtml}<div class="entry-num">${displayName}</div>`;
+                    card.innerHTML = `
+              <img src="${imageData || ''}" alt="${displayName}" loading="lazy" />
+              <div class="entry-num">${displayName}</div>
+            `;
                     card.addEventListener('click', () => selectCard(idx));
                     card.addEventListener('dblclick', () => showPreview(projectId, secretHash, entryNum));
                     grid.appendChild(card);

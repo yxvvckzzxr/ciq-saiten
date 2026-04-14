@@ -209,37 +209,45 @@
                 overlayBar.style.width = '0%';
                 let current = 0; const totalBatch = scanAnswers.length;
 
-                for (const a of scanAnswers) {
-                    let pageImageUrl = null;
+                if (!storage) {
+                    showAdminToast('Firebase Storage が未設定です。管理者に連絡してください。', 'error');
+                    overlay.style.display = 'none';
+                    return;
+                }
 
-                    // Firebase Storage にアップロード（ページ画像のみ — セル画像は不要）
-                    if (storage) {
-                        try {
-                            const pageRef = storage.ref(`projects/${projectId}/answers/${a.entryNumber}/pageImage`);
-                            const pageSnap = await pageRef.putString(a.pageImage, 'data_url');
-                            pageImageUrl = await pageSnap.ref.getDownloadURL();
-                        } catch (e) {
-                            console.error('Storage upload error:', e);
-                            showAdminToast(`受付番号 ${a.entryNumber}: 画像アップロード失敗`, 'error');
-                            continue;
-                        }
-                    } else {
-                        showAdminToast('Firebase Storage が未設定です。管理者に連絡してください。', 'error');
-                        overlay.style.display = 'none';
-                        return;
+                // 並列バッチアップロード（5件同時）
+                const UPLOAD_CONCURRENCY = 5;
+                const bucket = firebaseConfig.storageBucket;
+
+                async function uploadEntry(a) {
+                    try {
+                        const storagePath = `projects/${projectId}/answers/${a.entryNumber}/pageImage`;
+                        const pageRef = storage.ref(storagePath);
+                        await pageRef.putString(a.pageImage, 'data_url');
+                        // getDownloadURL() を省略 — URLを直接構築（ルールが read: if true の場合有効）
+                        const pageImageUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket}/o/${encodeURIComponent(storagePath)}?alt=media`;
+
+                        const data = {
+                            entryNumber: a.entryNumber,
+                            page: a.page,
+                            uploadedAt: SERVER_TIMESTAMP,
+                            pageImageUrl: pageImageUrl,
+                            cellRegions: a.cellRegions
+                        };
+                        await dbSet(`projects/${projectId}/protected/${secretHash}/answers/${a.entryNumber}`, data);
+                    } catch (e) {
+                        console.error(`Entry ${a.entryNumber} upload error:`, e);
+                        showAdminToast(`受付番号 ${a.entryNumber}: アップロード失敗`, 'error');
                     }
-                    const data = {
-                        entryNumber: a.entryNumber,
-                        page: a.page,
-                        uploadedAt: SERVER_TIMESTAMP,
-                        pageImageUrl: pageImageUrl,
-                        cellRegions: a.cellRegions
-                    };
-
-                    await dbSet(`projects/${projectId}/protected/${secretHash}/answers/${a.entryNumber}`, data);
                     current++;
                     overlayBar.style.width = `${(current / totalBatch) * 100}%`;
                     overlayText.textContent = `${current} / ${totalBatch} 件保存`;
+                }
+
+                // 並列実行（同時接続数制限付き）
+                for (let i = 0; i < scanAnswers.length; i += UPLOAD_CONCURRENCY) {
+                    const batch = scanAnswers.slice(i, i + UPLOAD_CONCURRENCY);
+                    await Promise.all(batch.map(uploadEntry));
                 }
 
                 overlayText.textContent = '完了しました！';
