@@ -68,7 +68,7 @@ body.page-index {
   color: white; background: linear-gradient(135deg, #2563eb, #1d4ed8);
   box-shadow: 0 4px 20px rgba(37, 99, 235, 0.35), inset 0 1px 0 rgba(255,255,255,0.12);
 }
-.page-index .btn {
+.page-index .btn:not(.credential-row .btn) {
   width: 100%; padding: 15px; border-radius: var(--radius-md); border: none;
   background: linear-gradient(135deg, var(--primary), var(--primary-hover));
   color: white; font-size: 15px; font-weight: 700; cursor: pointer;
