@@ -185,6 +185,32 @@
             const reqScorers = await dbGet(`projects/${projectId}/protected/${secretHash}/requiredScorers`);
             if (reqScorers) document.getElementById('required-scorers').value = reqScorers;
 
+            // ロック状態の確認と表示
+            const [entries, scores] = await Promise.all([
+                dbShallow(`projects/${projectId}/entries`),
+                dbShallow(`projects/${projectId}/protected/${secretHash}/scores`)
+            ]);
+            const hasEntries = entries && Object.keys(entries).length > 0;
+            const hasScores = scores && Object.keys(scores).filter(k => !k.startsWith('__')).length > 0;
+
+            // エントリーありでフルオープン切替ロック
+            if (hasEntries) {
+                const toggle = document.getElementById('full-open-toggle');
+                toggle.disabled = true;
+                toggle.closest('.config-row').classList.add('config-locked');
+                toggle.closest('.config-row').insertAdjacentHTML('beforeend',
+                    '<div class="lock-reason"><i class="fa-solid fa-lock"></i> エントリーがあるため変更できません</div>');
+            }
+
+            // スコアありで採点者数ロック
+            if (hasScores) {
+                document.querySelectorAll('.number-spinner-wrap')[1]?.closest('.config-row')?.classList.add('config-locked');
+                const scorerBtns = document.getElementById('required-scorers')?.closest('.number-spinner-wrap')?.querySelectorAll('.number-spinner-btn');
+                scorerBtns?.forEach(b => b.disabled = true);
+                document.getElementById('required-scorers')?.closest('.config-row')?.insertAdjacentHTML('beforeend',
+                    '<div class="lock-reason"><i class="fa-solid fa-lock"></i> 採点が開始されているため変更できません</div>');
+            }
+
             // エントリ番号取得
             try {
                 const data = await dbShallow(`projects/${projectId}/protected/${secretHash}/answers`);
