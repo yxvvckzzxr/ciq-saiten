@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="QuizOpus - よくある質問と回答。使い方・トラブルシューティング。">
+    <title>QuizOpus - ヘルプ & Q&A</title>
+    <link rel="stylesheet" href="css/design_system.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body { background: var(--bg-dark); color: var(--text-main); font-family: var(--font-family); margin: 0; padding: 24px; }
+        .help-container { max-width: 720px; margin: 0 auto; }
+        .help-header { text-align: center; margin-bottom: 40px; }
+        .help-header h1 { font-size: 28px; margin-bottom: 8px; }
+        .help-header p { color: var(--text-muted); font-size: 14px; }
+        .help-back { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 13px; text-decoration: none; margin-bottom: 24px; transition: color 0.2s; }
+        .help-back:hover { color: var(--primary); }
+        .qa-category { margin-bottom: 32px; }
+        .qa-category-title { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .qa-item { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: var(--radius-lg); margin-bottom: 8px; overflow: hidden; transition: border-color 0.3s; }
+        .qa-item:hover { border-color: var(--glass-border-hover); }
+        .qa-question { padding: 16px 20px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: 600; font-size: 14px; user-select: none; }
+        .qa-question i.fa-chevron-down { transition: transform 0.3s; color: var(--text-muted); font-size: 12px; flex-shrink: 0; }
+        .qa-item.open .qa-question i.fa-chevron-down { transform: rotate(180deg); }
+        .qa-answer { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.3s; }
+        .qa-item.open .qa-answer { max-height: 500px; }
+        .qa-answer-inner { padding: 0 20px 16px; font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+        .qa-answer-inner code { background: var(--bg-secondary); padding: 2px 6px; border-radius: 4px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="help-container">
+        <a href="index.html" class="help-back"><i class="fa-solid fa-arrow-left"></i> トップページに戻る</a>
+        <div class="help-header">
+            <h1><i class="fa-solid fa-circle-question"></i> ヘルプ & Q&A</h1>
+            <p>QuizOpusの使い方やよくある質問をまとめています</p>
+        </div>
+
+        <div class="qa-category">
+            <div class="qa-category-title"><i class="fa-solid fa-right-to-bracket"></i> ログイン・アカウント</div>
+
+            <div class="qa-item">
+                <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                    プロジェクトIDとパスワードはどこで手に入りますか？
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="qa-answer"><div class="qa-answer-inner">
+                    プロジェクトを作成した管理者から共有されます。管理者は作成完了画面で「プロジェクトID」「管理者用マスターパスワード」「採点者用アクセスコード」の3つを受け取ります。採点者には「プロジェクトID」と「採点者用アクセスコード」を共有してください。
+                </div></div>
+            </div>
+
+            <div class="qa-item">
+                <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                    採点者と管理者の違いは？
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="qa-answer"><div class="qa-answer-inner">
+                    <strong>採点者</strong>：問題ごとに正誤を入力します。複数人で同じ問題を採点することで、採点ミスを防ぎます。<br>
+                    <strong>管理者</strong>：プロジェクトの設定、答案のアップロード、模範解答の登録、採点結果の確認・CSVエクスポートなど、すべての操作が可能です。
+                </div></div>
+            </div>
+
+            <div class="qa-item">
+                <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                    同じ名前でログインしたらどうなりますか？
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="qa-answer"><div class="qa-answer-inner">
+                    既に同じ名前の採点者がいる場合、確認ダイアログが表示されます。同一人物であればそのまま続行できます。別人の場合は名前を変更してログインしてください（例: 田中A、田中B）。
+                </div></div>
+            </div>
+        </div>
+
+        <div class="qa-category">
+            <div class="qa-category-title"><i class="fa-solid fa-pen-to-square"></i> 採点</div>
+
+            <div class="qa-item">
+                <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                    採点はどのように行いますか？
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="qa-answer"><div class="qa-answer-inner">
+                    ログイン後、問題一覧が表示されます。問題を選択すると、各参加者の回答画像が表示されるので、模範解答と見比べて「○（正解）」「×（不正解）」を選びます。全員分の採点が終わったら「完了」ボタンを押します。
+                </div></div>
+            </div>
+
+            <div class="qa-item">
+                <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                    採点者が複数いる場合の結果はどうなりますか？
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="qa-answer"><div class="qa-answer-inner">
+                    全ての採点者が同じ結果を出した場合、その結果が自動的に採用されます。採点者の間で意見が分かれた場合は「コンフリクト」として管理者に通知され、管理者が最終判断を行います。
+                </div></div>
+            </div>
+
+            <div class="qa-item">
+                <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                    採点途中でブラウザを閉じてしまいました
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="qa-answer"><div class="qa-answer-inner">
+                    採点はリアルタイムでサーバーに保存されています。同じ名前で再度ログインすれば、途中から再開できます。
+                </div></div>
+            </div>
+        </div>
+
+        <div class="qa-category">
+            <div class="qa-category-title"><i class="fa-solid fa-gear"></i> 管理者向け</div>
+
+            <div class="qa-item">
+                <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                    回答用紙のPDFはどう準備しますか？
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="qa-answer"><div class="qa-answer-inner">
+                    スキャナーで参加者の回答用紙をPDF化してください。1ページ1枚で、QRコードが読み取れる解像度（300dpi以上推奨）で保存してください。管理画面の「答案管理」タブからPDFをアップロードすると、自動でQRコードを読み取り、各参加者の回答として保存されます。
+                </div></div>
+            </div>
+
+            <div class="qa-item">
+                <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                    模範解答のCSVフォーマットは？
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="qa-answer"><div class="qa-answer-inner">
+                    2つのフォーマットに対応しています：<br>
+                    ① <strong>番号付き</strong>: <code>1,東京</code> のように「問題番号,解答」の形式<br>
+                    ② <strong>番号なし</strong>: 1行目が第1問の解答、2行目が第2問の解答…という形式
+                </div></div>
+            </div>
+
+            <div class="qa-item">
+                <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                    プロジェクトを削除するとどうなりますか？
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="qa-answer"><div class="qa-answer-inner">
+                    全てのエントリー、答案画像、採点データ、設定がサーバーから完全に削除され、復元できません。削除前に「全データをエクスポート」機能でバックアップを取ることを強く推奨します。
+                </div></div>
+            </div>
+        </div>
+
+        <div class="qa-category">
+            <div class="qa-category-title"><i class="fa-solid fa-clipboard-list"></i> エントリー・参加</div>
+
+            <div class="qa-item">
+                <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                    エントリーをキャンセルしたい場合は？
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="qa-answer"><div class="qa-answer-inner">
+                    キャンセルフォームから、エントリー時に発行されたUUIDとパスワードを入力してキャンセルできます。キャンセルフォームのURLは管理者またはエントリー確認メールに記載されています。
+                </div></div>
+            </div>
+
+            <div class="qa-item">
+                <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                    成績照合とは何ですか？
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="qa-answer"><div class="qa-answer-inner">
+                    採点完了後、参加者が自分のエントリー番号を入力して採点結果を確認できる機能です。各問題の正誤と合計点が表示されます。成績照合のURLは管理者から共有されます。
+                </div></div>
+            </div>
+        </div>
+
+        <div class="qa-category">
+            <div class="qa-category-title"><i class="fa-solid fa-triangle-exclamation"></i> トラブルシューティング</div>
+
+            <div class="qa-item">
+                <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                    「データベース通信拒否」と表示されます
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="qa-answer"><div class="qa-answer-inner">
+                    Firebaseへの認証が切れた可能性があります。ページを再読み込みするか、ログアウトして再度ログインしてください。それでも解決しない場合は運営者にお問い合わせください。
+                </div></div>
+            </div>
+
+            <div class="qa-item">
+                <div class="qa-question" onclick="this.parentElement.classList.toggle('open')">
+                    スマートフォンでダブルタップするとズームされます
+                    <i class="fa-solid fa-chevron-down"></i>
+                </div>
+                <div class="qa-answer"><div class="qa-answer-inner">
+                    最新版ではダブルタップズーム防止が組み込まれています。ブラウザのキャッシュをクリアして再読み込みしてください。
+                </div></div>
+            </div>
+        </div>
+
+        <div style="text-align:center; margin-top:40px; padding:20px;">
+            <p style="color:var(--text-muted); font-size:13px; margin-bottom:12px;">解決しない問題がありますか？</p>
+            <button class="btn secondary" onclick="openFeedback()" style="display:inline-flex;width:auto;">
+                <i class="fa-solid fa-comment-dots"></i> フィードバックを送る
+            </button>
+        </div>
+    </div>
+    <script src="js/config.js"></script>
+    <script src="js/shared.js"></script>
+</body>
+</html>
