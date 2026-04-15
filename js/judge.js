@@ -51,9 +51,7 @@ let totalQuestions = 100;
                 (data) => updateGrid(data || {}),
                 3000
             );
-            IdleManager.register(scorePoller);
             scorePoller.start();
-            IdleManager.init();
         }
 
         async function fetchEntriesMaster() {

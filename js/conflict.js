@@ -39,9 +39,7 @@ const { projectId, secretHash } = auth;
                 },
                 3000
             );
-            IdleManager.register(scorePoller);
             scorePoller.start();
-            IdleManager.init();
         }
 
         function render() {

@@ -201,9 +201,7 @@
                 },
                 5000
             );
-            IdleManager.register(scorePoller);
             scorePoller.start();
-            IdleManager.init();
 
             // 模範解答はオンデマンド → prep/模範解答タブで初回ロード
             const modelData = await dbGet(`projects/${projectId}/protected/${secretHash}/answers_text`);

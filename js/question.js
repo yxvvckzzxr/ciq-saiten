@@ -84,9 +84,7 @@ const currentQ = parseInt(localStorage.getItem('current_q') || '1');
                 },
                 3000
             );
-            IdleManager.register(scorePoller);
             scorePoller.start();
-            IdleManager.init();
 
             // 採点者登録はバックグラウンドで実行（描画をブロックしない）
             dbTransaction(

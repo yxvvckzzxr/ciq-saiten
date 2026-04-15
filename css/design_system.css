@@ -1190,11 +1190,11 @@ textarea::placeholder { color: var(--text-faint); }
 }
 .credential-row:not(:last-child) { margin-bottom: 16px; }
 .credential-row input {
-  margin-bottom: 0; min-width: 0; flex: 1;
+  margin-bottom: 0; min-width: 0; flex: 1; font-size: 13px;
 }
 .credential-row .btn {
-  width: auto; padding: 0 16px; font-size: 14px;
-  flex-shrink: 0;
+  width: auto; padding: 8px 12px; font-size: 12px;
+  flex-shrink: 0; min-width: 0;
 }
 .credential-row .btn.master { background: #f59e0b; }
 .credential-row .btn.standard { background: #2563eb; }

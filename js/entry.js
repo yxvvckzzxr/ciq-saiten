@@ -179,7 +179,7 @@ const params = new URLSearchParams(location.search);
                             `;
                         } else {
                             prefArea.innerHTML = `
-                                <div style="font-size:12px;color:#94a3b8;line-height:1.4;"><i class="fa-solid fa-circle-info"></i> システム上の登録用です。大会当日は本名（姓名）でのご参加・表示となります。</div>
+                                <div style="font-size:12px;color:#f87171;line-height:1.4;font-weight:600;"><i class="fa-solid fa-circle-exclamation"></i> 大会当日は本名（姓名）でのご参加・表示となります。エントリーネームはシステム上の登録用です。</div>
                             `;
                         }
                     }
