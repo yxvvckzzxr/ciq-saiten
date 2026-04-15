@@ -305,7 +305,22 @@ function requireAuth(opts = {}) {
         setTimeout(() => location.href = 'index.html', 3000);
         return null;
     }
+    // プロジェクト削除を監視（全ページ自動対応）
+    watchProjectDeletion(projectId);
     return { projectId, secretHash, scorerName, scorerRole };
+}
+// プロジェクト削除検知 — publicSettingsが消えたらログイン画面へ
+function watchProjectDeletion(projectId) {
+    if (!projectId) return;
+    let initialized = false;
+    dbRef(`projects/${projectId}/publicSettings`).on('value', snap => {
+        if (!initialized) { initialized = true; return; } // 初回スキップ
+        if (snap.val() === null) {
+            showToast('このプロジェクトは削除されました。ログイン画面に戻ります。', 'error', 5000);
+            session.clear();
+            setTimeout(() => { location.href = 'index.html'; }, 2000);
+        }
+    });
 }
 
 /**
