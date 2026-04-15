@@ -285,14 +285,13 @@ document.addEventListener('keydown', (e) => {
 
         async function checkAutoConfirm(allScores, q) {
             const completedScorers = Object.keys(allScores[`__completed__q${q}`] || {});
-            if (completedScorers.length < 3) return;
+            if (completedScorers.length < requiredScorers) return;
 
             const entryNums = Object.keys(allScores)
                 .filter(k => !k.startsWith('__'))
                 .map(Number);
 
             const finals = {};
-            let allAgree = true;
 
             for (const entryNum of entryNums) {
                 const qScores = allScores[entryNum]?.[`q${q}`] || {};
@@ -300,20 +299,22 @@ document.addEventListener('keydown', (e) => {
                 const corrects = vals.filter(v => v === 'correct').length;
                 const wrongs = vals.filter(v => v === 'wrong').length;
 
-                // 3票完全一致のみ自動確定。それ以外はコンフリクト（管理者判断待ち）
-                if (corrects === 3) {
+                // 全票一致のみ自動確定。それ以外はコンフリクト（管理者判断待ち）
+                if (corrects === requiredScorers) {
                     finals[entryNum] = 'correct';
-                } else if (wrongs === 3) {
+                } else if (wrongs === requiredScorers) {
                     finals[entryNum] = 'wrong';
-                } else {
-                    // 意見が割れている → 自動確定しない
-                    allAgree = false;
-                    break;
                 }
+                // 不一致 → finalに含めない（conflict.htmlで管理者が個別に決定）
             }
 
-            if (allAgree) {
-                await dbSet(`projects/${projectId}/protected/${secretHash}/scores/__final__q${q}`, finals);
+            if (Object.keys(finals).length > 0) {
+                // 個別に書き込む（既存の管理者決定を上書きしない）
+                const updates = {};
+                for (const [en, result] of Object.entries(finals)) {
+                    updates[`__final__q${q}/${en}`] = result;
+                }
+                await dbUpdate(`projects/${projectId}/protected/${secretHash}/scores`, updates);
             }
         }
 
