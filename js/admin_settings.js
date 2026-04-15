@@ -7,28 +7,33 @@
             );
             if (!confirmed) return;
             try {
-                // Storage の画像も全削除
+                // Storage の画像も全削除（再帰）
                 if (storage) {
                     try {
-                        const listResult = await storage.ref(`projects/${projectId}`).listAll();
-                        for (const item of listResult.items) { await item.delete().catch(() => {}); }
-                        for (const prefix of listResult.prefixes) {
-                            const sub = await prefix.listAll();
-                            for (const item of sub.items) { await item.delete().catch(() => {}); }
+                        async function deleteStorageFolder(ref) {
+                            const list = await ref.listAll();
+                            for (const item of list.items) { await item.delete().catch(() => {}); }
+                            for (const prefix of list.prefixes) { await deleteStorageFolder(prefix); }
                         }
-                    } catch(e) {}
+                        await deleteStorageFolder(storage.ref(`projects/${projectId}`));
+                    } catch(e) { console.warn('Storage削除スキップ:', e); }
                 }
-                // DB のサブパスを個別に削除（ルート一括削除は権限エラーになるため）
-                await Promise.all([
-                    dbRemove(`projects/${projectId}/protected`),
-                    dbRemove(`projects/${projectId}/entries`),
-                    dbRemove(`projects/${projectId}/publicSettings`),
-                    dbRemove(`projects/${projectId}/settings`),
-                    dbRemove(`projects/${projectId}/disclosure`),
-                ].map(p => p.catch(() => {})));
+                // DB のサブパスを個別に削除
+                const delPaths = [
+                    `projects/${projectId}/protected/${secretHash}`,
+                    `projects/${projectId}/entries`,
+                    `projects/${projectId}/publicSettings`,
+                    `projects/${projectId}/disclosure`,
+                ];
+                const results = await Promise.allSettled(delPaths.map(p => dbRemove(p)));
+                const failures = results.filter(r => r.status === 'rejected');
+                if (failures.length > 0) {
+                    console.error('一部削除失敗:', failures);
+                }
                 showAdminToast('プロジェクトが削除されました。', 'success');
                 setTimeout(() => { session.clear(); location.href = 'index.html'; }, 1500);
             } catch(e) {
+                console.error('削除エラー詳細:', e);
                 showAdminToast('削除エラー: ' + e.message);
             }
         }
