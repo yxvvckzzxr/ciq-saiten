@@ -3,46 +3,46 @@
     "projects": {
       "$projectId": {
         "publicSettings": {
-          ".read": true,
-          ".write": true
+          ".read": "auth != null",
+          ".write": "auth != null"
         },
         "entries": {
-          ".read": true,
-          ".write": true
+          ".read": "auth != null",
+          ".write": "auth != null"
         },
         "protected": {
           "$secretHash": {
-            ".read": true,
-            ".write": true
+            ".read": "auth != null",
+            ".write": "auth != null"
           }
         },
         "answers_text": {
-          ".read": true,
-          ".write": true
+          ".read": "auth != null",
+          ".write": "auth != null"
         },
         "answers": {
-          ".read": true,
-          ".write": true
+          ".read": "auth != null",
+          ".write": "auth != null"
         },
         "scores": {
-          ".read": true,
-          ".write": true
+          ".read": "auth != null",
+          ".write": "auth != null"
         },
         "config": {
-          ".read": true,
-          ".write": true
+          ".read": "auth != null",
+          ".write": "auth != null"
         },
         "entryConfig": {
-          ".read": true,
-          ".write": true
+          ".read": "auth != null",
+          ".write": "auth != null"
         },
         "disclosure": {
-          ".read": true,
-          ".write": true
+          ".read": "auth != null",
+          ".write": "auth != null"
         },
         "settings": {
-          ".read": true,
-          ".write": true
+          ".read": "auth != null",
+          ".write": "auth != null"
         }
       }
     },
