@@ -241,7 +241,12 @@ window.addEventListener('unhandledrejection', function(event) {
  * ログアウト — セッションを破棄してトップへ
  */
 function logout() {
+    // セッション情報をクリア
     session.clear();
+    // PII含むマスターデータも削除
+    Object.keys(localStorage).forEach(k => {
+        if (k.startsWith('masterData_')) localStorage.removeItem(k);
+    });
     location.href = 'index.html';
 }
 
