@@ -28,7 +28,7 @@ const currentQ = parseInt(localStorage.getItem('current_q') || '1');
             document.getElementById('answer-badge').textContent = answerText || '未設定';
 
             if (allAnswers) {
-                entryNumbers = Object.keys(allAnswers).map(Number).sort((a, b) => a - b);
+                entryNumbers = Object.keys(allAnswers).map(Number).filter(n => n > 0).sort((a, b) => a - b);
                 // キャッシュに格納 & 画像プリロード開始
                 const preloadedUrls = new Set();
                 entryNumbers.forEach(num => {
