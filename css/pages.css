@@ -270,9 +270,9 @@ body.page-judge { padding: 24px; }
 @media (min-width: 1024px) { .answer-grid { grid-template-columns: repeat(8, 1fr); } }
 .answer-card { background: var(--glass-bg); backdrop-filter: blur(12px) saturate(180%); border-radius: var(--radius-md); padding: 14px; text-align: center; border: 1px solid var(--glass-border); cursor: pointer; transition: transform 0.4s var(--spring), box-shadow 0.35s var(--smooth), border-color 0.3s, background 0.3s; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; }
 .answer-card:hover { transform: translateY(-4px) scale(1.02); box-shadow: var(--shadow-lg); background: rgba(255,255,255,0.05); border-color: var(--glass-border-hover); }
-.answer-card.correct { border-color: rgba(16, 185, 129, 0.5); background: rgba(16, 185, 129, 0.08); }
-.answer-card.wrong { border-color: rgba(239, 68, 68, 0.5); background: rgba(239, 68, 68, 0.08); }
-.answer-card.hold { border-color: rgba(245, 158, 11, 0.5); background: rgba(245, 158, 11, 0.08); }
+.answer-card.correct { border: 2px solid #10b981; background: rgba(16, 185, 129, 0.18); box-shadow: inset 4px 0 0 #10b981; }
+.answer-card.wrong { border: 2px solid #ef4444; background: rgba(239, 68, 68, 0.18); box-shadow: inset 4px 0 0 #ef4444; }
+.answer-card.hold { border: 2px solid #f59e0b; background: rgba(245, 158, 11, 0.18); box-shadow: inset 4px 0 0 #f59e0b; }
 .answer-card img { width: 100%; object-fit: contain; border-radius: 4px; background: white; display: block; }
 .answer-card .entry-num { font-size: 10px; font-weight: 600; color: var(--text-muted); margin-top: 4px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .answer-card.selected { box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.4), 0 0 16px rgba(59,130,246,0.12); transform: scale(1.03); z-index: 10; border-color: #3b82f6; }
