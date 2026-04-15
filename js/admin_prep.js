@@ -29,7 +29,8 @@
                 config.answerRegions.push({ x, y, w: colWidth, h: rowHeight });
             }
             
-            const boxX = 15, boxY = gridMarginTop + maxGridHeight + 5, boxW = 180, boxH = 26, rH = boxH / 3;
+            const markerBottom = pageHeight - margin; // 292mm
+            const boxX = 15, boxY = gridMarginTop + maxGridHeight + 5, boxW = 180, boxH = markerBottom - boxY, rH = boxH / 3;
             const L2 = boxX + 13, bubbleW = 3.2, bubbleH = 5.0;
             
             for (let row = 0; row < 3; row++) {
@@ -98,7 +99,8 @@
                     const chars = str.split(''), spacing = 3.5, startY = centerY - ((chars.length - 1) * spacing) / 2;
                     chars.forEach((c, i) => doc.text(c, x, startY + i * spacing, { align: 'center', baseline: 'middle' }));
                 }
-                const boxX = 15, boxY = gridMarginTop + maxGridHeight + 5, boxW = 180, boxH = 26;
+                const markerBottom = pageHeight - margin; // 292mm
+                const boxX = 15, boxY = gridMarginTop + maxGridHeight + 5, boxW = 180, boxH = markerBottom - boxY;
                 doc.rect(boxX, boxY, boxW, boxH, 'S');
                 const L1 = boxX + 6, L2 = boxX + 13, L3 = boxX + 57, L4 = L3 + 6, L5 = L4 + 18, L6 = L5 + 6, L7 = L6 + 40, L8 = L7 + 6;
                 [L1, L2, L3, L4, L5, L6, L7, L8].forEach(lx => doc.line(lx, boxY, lx, boxY + boxH, 'S'));
@@ -202,7 +204,7 @@
                         const cr = transformRegion(scanConfig.answerRegions[q], transform);
                         cellRegions[`q${q + 1}`] = { x: Math.round(cr.x), y: Math.round(cr.y), w: Math.round(cr.w), h: Math.round(cr.h) };
                     }
-                    scanAnswers.push({ page: i, entryNumber, cellRegions, tomboError: detectedResult.error, pageImage: workCanvas.toDataURL('image/webp', 0.5), pageWidth: workCanvas.width });
+                    scanAnswers.push({ page: i, entryNumber, cellRegions, tomboError: detectedResult.error, pageImage: workCanvas.toDataURL('image/webp', 0.4), pageWidth: workCanvas.width });
                 }
 
                 overlayTitle.textContent = 'サーバーへ保存中...';
@@ -216,24 +218,24 @@
                 }
 
                 // 並列バッチアップロード（10件同時）
-                const UPLOAD_CONCURRENCY = 10;
+                const UPLOAD_CONCURRENCY = 15;
 
                 async function uploadEntry(a) {
                     try {
                         const storagePath = `projects/${projectId}/answers/${a.entryNumber}/pageImage`;
                         const pageRef = storage.ref(storagePath);
+                        // Storage アップロードと URL 取得を直列（依存あり）、DB書き込みは URL 取得後即実行
                         const pageSnap = await pageRef.putString(a.pageImage, 'data_url');
                         const pageImageUrl = await pageSnap.ref.getDownloadURL();
-
-                        const data = {
+                        // DB書き込み（awaitしない — 次のアップロードを即開始）
+                        dbSet(`projects/${projectId}/protected/${secretHash}/answers/${a.entryNumber}`, {
                             entryNumber: a.entryNumber,
                             page: a.page,
                             uploadedAt: SERVER_TIMESTAMP,
                             pageImageUrl: pageImageUrl,
                             cellRegions: a.cellRegions,
                             pageWidth: a.pageWidth
-                        };
-                        await dbSet(`projects/${projectId}/protected/${secretHash}/answers/${a.entryNumber}`, data);
+                        }).catch(e => console.error(`DB write error for ${a.entryNumber}:`, e));
                     } catch (e) {
                         console.error(`Entry ${a.entryNumber} upload error:`, e);
                         showAdminToast(`受付番号 ${a.entryNumber}: アップロード失敗`, 'error');
