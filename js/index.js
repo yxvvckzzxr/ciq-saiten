@@ -332,3 +332,10 @@ document.addEventListener('keyup', (e) => {
 		}
 	}
 });
+
+// 管理者モード: ?mode=admin でアクセスすると新規作成UIを表示
+if (new URLSearchParams(location.search).get('mode') === 'admin') {
+	const tabsEl = document.getElementById('tabs-container');
+	if (tabsEl) tabsEl.hidden = false;
+	setTab('create');
+}

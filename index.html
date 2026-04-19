@@ -31,7 +31,11 @@
   <div class="card">
     <div id="status-msg" class="status-msg-box"></div>
 
-    <!-- タブUI不要: ログイン画面のみ -->
+    <!-- タブUI（管理者モード時のみ表示） -->
+    <div class="tabs" id="tabs-container" hidden>
+      <div class="tab active" id="tab-join" onclick="setTab('join')">参加する</div>
+      <div class="tab" id="tab-create" onclick="setTab('create')">新規作成</div>
+    </div>
 
     <!-- 参加セクション -->
     <div id="section-join">
@@ -51,8 +55,33 @@
       <button class="btn" id="login-btn" onclick="joinProject()">部屋へ入る <i class="fa-solid fa-arrow-right-to-bracket"></i></button>
     </div>
 
-    <!-- 新規作成・復元・完了セクション（管理者専用 — 通常非表示） -->
-    <div id="section-create" hidden></div>
+    <!-- 新規作成セクション（管理者モード時のみ表示） -->
+    <div id="section-create" hidden>
+      <label>プロジェクト名（大会名など）</label>
+      <input type="text" id="create-project-name" placeholder="例：QuizOpus 2026" />
+
+      <label>あなたのお名前（最初のシステム作成者）</label>
+      <input type="text" id="create-name" placeholder="例：山田太郎" />
+      
+      <div class="warning-box">
+        <strong><i class="fa-solid fa-shield-halved"></i> データの取り扱いに関する注意</strong><br>
+        ・半年間アクセスのないプロジェクトは自動削除されます。<br>
+        ・アップロードされた答案画像の元データは<strong>24時間</strong>経過で削除されます。<br>
+        ・大会終了後は必ず管理画面から「全データをエクスポート」の実行をお願いします。
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label class="custom-checkbox">
+          <input type="checkbox" id="create-tos">
+          <span class="checkbox-mark"><svg class="checkbox-svg" viewBox="0 0 16 16"><path d="M3 8.5L6.5 12L13 4"></path></svg></span>
+          <span><a href="legal.html" target="_blank" style="color:var(--primary)">利用規約・プライバシーポリシー</a>に同意する</span>
+        </label>
+      </div>
+      <button class="btn" id="create-btn" onclick="createProject()">新しいプロジェクトを作成 <i class="fa-solid fa-plus"></i></button>
+
+      <div class="restore-link" onclick="setTab('import')"><i class="fa-solid fa-clock-rotate-left"></i> 過去のバックアップから復元する</div>
+    </div>
+
+    <!-- 作成完了セクション -->
     <div id="section-success" hidden style="text-align: center;">
       <div class="success-icon"><i class="fa-solid fa-circle-check"></i></div>
       <h3 class="success-title">作成完了！</h3>
@@ -77,7 +106,32 @@
       </div>
       <button class="btn" onclick="location.href='admin.html'">管理画面へ進む <i class="fa-solid fa-gear"></i></button>
     </div>
-    <div id="section-import" hidden></div>
+
+    <!-- 復元(インポート)セクション（管理者モード時のみ表示） -->
+    <div id="section-import" hidden>
+      <h3 class="section-heading"><i class="fa-solid fa-clock-rotate-left"></i> バックアップの復元</h3>
+      <div class="import-desc">
+        以前保存した <code>.ciq</code> ファイルを選択し、新しい設定の下で解答データを復旧します。過去のIDとの競合を防ぐため「新しい参加ID」が発行されます。
+      </div>
+      
+      <label><i class="fa-solid fa-file-arrow-up"></i> バックアップファイル</label>
+      <div class="file-upload-zone" onclick="document.getElementById('import-file').click()">
+        <i class="fa-solid fa-cloud-arrow-up"></i>
+        <div class="file-label">.ciq ファイルを選択</div>
+        <div class="file-name" id="import-file-name"></div>
+        <input type="file" id="import-file" accept=".ciq,application/json" onchange="document.getElementById('import-file-name').textContent=this.files[0]?.name||'';document.getElementById('import-file-name').style.display=this.files[0]?'block':'none'" />
+      </div>
+      
+      <label>新しいプロジェクト名</label>
+      <input type="text" id="import-project-name" placeholder="例：QuizOpus 2026 (復旧版)" />
+      
+      <label><i class="fa-solid fa-user"></i> あなたのお名前</label>
+      <input type="text" id="import-name" placeholder="例：山田太郎" />
+      
+      <button class="btn mt-sm" id="import-btn" onclick="importProject()">復元して新設 <i class="fa-solid fa-upload"></i></button>
+      
+      <div class="restore-link" onclick="setTab('join')"><i class="fa-solid fa-arrow-left"></i> 戻る</div>
+    </div>
   </div>
   <div style="margin-top: 24px; text-align: center; display: flex; justify-content: center; gap: 16px;">
     <a href="legal.html" style="color: #64748b; font-size: 12px; text-decoration: none;">
