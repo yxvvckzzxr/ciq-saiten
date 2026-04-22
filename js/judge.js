@@ -134,17 +134,6 @@ let requiredScorers = 3;
                 }
             }
 
-            // プログレスバー更新
-            const pct = totalQuestions > 0 ? Math.round((doneCount / totalQuestions) * 100) : 0;
-            const pBar = document.getElementById('judge-progress');
-            if (pBar) {
-                pBar.style.display = 'block';
-                document.getElementById('progress-pct').textContent = `${doneCount}/${totalQuestions} (${pct}%)`;
-                document.getElementById('progress-fill').style.width = `${pct}%`;
-                if (pct === 100) {
-                    document.getElementById('progress-fill').style.background = 'linear-gradient(90deg, #22c55e, #10b981)';
-                }
-            }
         }
 
         function enterQ(q) {

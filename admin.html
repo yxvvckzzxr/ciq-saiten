@@ -295,48 +295,21 @@
                 </div>
             </div>
             <div class="section glass-panel">
-                <h2><i class="fa-solid fa-scale-balanced"></i> 同点処理</h2>
-                <div class="config-panel" style="margin-bottom:12px;">
-                    <div class="config-row" style="flex-wrap:wrap;gap:12px;align-items:flex-start;">
-                        <div style="min-width:fit-content;">
-                            <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">方式</label>
-                            <select id="tiebreak-mode" class="custom-select" onchange="document.getElementById('tiebreak-approx').style.display=this.value==='approx'?'flex':'none'">
-                                <option value="streak">連答（最長連続正解数）</option>
-                                <option value="approx">近似値</option>
-                            </select>
-                        </div>
-                        <div id="tiebreak-approx" style="display:none;gap:8px;align-items:flex-end;">
-                            <div>
-                                <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">近似値問題番号</label>
-                                <input type="number" id="approx-question" min="1" value="1" style="width:70px;padding:6px 10px;border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-main);border:1px solid var(--glass-border);font-size:13px;" />
-                            </div>
-                            <div>
-                                <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">正解値</label>
-                                <input type="number" id="approx-answer" step="any" value="" placeholder="例: 42" style="width:100px;padding:6px 10px;border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-main);border:1px solid var(--glass-border);font-size:13px;" />
-                            </div>
-                        </div>
-                    </div>
-                    <p class="desc-text" style="margin-top:8px;font-size:11px;color:var(--text-faint);">
-                        <i class="fa-solid fa-circle-info"></i> 同点時の順位決定に使用します。CSVエクスポート時に適用されます。
-                    </p>
-                </div>
-            </div>
-            <div class="section glass-panel">
                 <h2><i class="fa-solid fa-file-csv"></i> 採点結果CSV</h2>
                 <div class="csv-status" id="csv-status"><i class="fa-solid fa-spinner fa-spin"></i> 確認中...</div>
                 <div class="config-panel" style="margin-bottom:12px;">
-                    <div class="config-row" style="flex-wrap:wrap;gap:8px;">
-                        <div style="min-width:fit-content;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div>
                             <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">名前区切り</label>
-                            <select id="csv-name-sep" class="custom-select">
+                            <select id="csv-name-sep" class="custom-select" style="width:100%;">
                                 <option value="fullspace">全角スペース</option>
                                 <option value="halfspace">半角スペース</option>
                                 <option value="none">区切りなし</option>
                             </select>
                         </div>
-                        <div style="min-width:fit-content;">
+                        <div>
                             <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">文字数固定</label>
-                            <select id="csv-name-fixed" class="custom-select">
+                            <select id="csv-name-fixed" class="custom-select" style="width:100%;">
                                 <option value="0">なし</option>
                                 <option value="4">4文字</option>
                                 <option value="5">5文字</option>
@@ -345,8 +318,8 @@
                             </select>
                         </div>
                     </div>
-                    <div style="font-size:11px;color:var(--text-muted);margin-top:6px;">
-                        <i class="fa-solid fa-circle-info"></i> 文字数固定: 姓名の合計が指定文字数未満の場合、姓と名の間にスペースを挿入して揃えます。超える場合・エントリーネームの場合はそのまま出力します。
+                    <div style="font-size:11px;color:var(--text-muted);margin-top:8px;">
+                        <i class="fa-solid fa-circle-info"></i> 文字数固定: 姓名の合計が指定文字数未満の場合、姓と名の間にスペースを挿入して揃えます。
                     </div>
                 </div>
                 <button class="btn" id="csv-btn" disabled onclick="exportCSV()"><i class="fa-solid fa-download"></i> 採点結果CSV出力</button>
