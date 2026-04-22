@@ -22,25 +22,7 @@
                 } catch(e) { console.error('問題数の同期失敗:', e); }
             }
         };
-        // ============================
-        // 採点者数設定
-        // ============================
-        async function adjustRequiredScorers(delta) {
-            const input = document.getElementById('required-scorers');
-            let val = parseInt(input.value) || 3;
-            val += delta;
-            if (val < 1) val = 1;
-            if (val > 4) val = 4;
-            // 採点開始後は変更不可
-            const scores = await dbShallow(`projects/${projectId}/protected/${secretHash}/scores`);
-            if (scores && Object.keys(scores).length > 0) {
-                showAdminToast('採点が開始されているため変更できません', 'error');
-                return;
-            }
-            input.value = val;
-            await dbSet(`projects/${projectId}/protected/${secretHash}/requiredScorers`, val);
-            showAdminToast(`必要採点者数を ${val} 人に設定しました`, 'success');
-        }
+
 
         // ============================
         // 設定更新処理
@@ -50,6 +32,22 @@
             const termsText = document.getElementById('setting-terms').value.trim();
             await dbSet(`projects/${projectId}/publicSettings/terms`, termsText || null);
             showAdminToast('参加規約を更新しました', 'success');
+        }
+
+        function toggleMaxEntries() {
+            const isOn = document.getElementById('max-entries-toggle').checked;
+            const badge = document.getElementById('max-entries-status');
+            const inputArea = document.getElementById('max-entries-input-area');
+            if (isOn) {
+                badge.textContent = document.getElementById('setting-max-entries').value + '人';
+                badge.className = 'status-badge status-open';
+                inputArea.style.display = 'block';
+            } else {
+                badge.textContent = '制限なし';
+                badge.className = 'status-badge status-closed';
+                inputArea.style.display = 'none';
+            }
+            saveEntryPeriod();
         }
 
 
@@ -109,9 +107,14 @@
         async function saveEntryPeriod() {
             const start = document.getElementById('entry-period-start').value || null;
             const end = document.getElementById('entry-period-end').value || null;
-            const maxEntries = parseInt(document.getElementById('setting-max-entries').value) || 0;
+            const hasLimit = document.getElementById('max-entries-toggle').checked;
+            const maxEntries = hasLimit ? (parseInt(document.getElementById('setting-max-entries').value) || 100) : 0;
             await dbUpdate(`projects/${projectId}/protected/${secretHash}/entryConfig`, { periodStart: start, periodEnd: end, maxEntries });
             await dbUpdate(`projects/${projectId}/publicSettings`, { periodStart: start, periodEnd: end, maxEntries });
+            // トグルONなら人数バッジも更新
+            if (hasLimit) {
+                document.getElementById('max-entries-status').textContent = maxEntries + '人';
+            }
             showAdminToast('受付期間・定員を保存しました', 'success');
         }
 
@@ -360,25 +363,23 @@
 
 
 
-        async function deleteProject() {
-            const pName = projectId;
+        async function resetProject() {
             if (!(await showConfirm(
-                'このプロジェクトの全データをサーバーから完全に削除しますか？\n\n' +
+                'プロジェクト内の全データ（エントリー・答案・スコア）をリセットしますか？\n\n' +
                 '⚠️ この操作は取り消せません。\n' +
-                '事前に「全データをエクスポート」でバックアップを取ることを強く推奨します。',
-                '完全に削除する'
+                'プロジェクト設定（パスワード・暗号鍵等）は維持されます。',
+                'リセットする'
             ))) return;
 
             // 2段階確認
             if (!(await showConfirm(
-                `プロジェクト「${pName}」を本当に削除しますか？\nすべてのエントリー・答案・スコアが失われます。`,
-                '削除を確定'
+                `プロジェクト「${projectId}」を本当にリセットしますか？\nすべてのエントリー・答案・スコアが失われます。`,
+                'リセットを確定'
             ))) return;
 
             try {
-                showAdminToast('プロジェクトを削除しています...', 'info', 10000);
+                showAdminToast('プロジェクトをリセットしています...', 'info', 10000);
 
-                // DB のサブパスを個別に削除（ルート一括はDB権限エラー）
                 const removePath = async (p) => {
                     try { await dbRef(p).remove(); } catch(e) { console.warn(`削除スキップ: ${p}`, e.message); }
                 };
@@ -387,19 +388,15 @@
                     removePath(`${protectedBase}/scores`),
                     removePath(`${protectedBase}/answers`),
                     removePath(`${protectedBase}/answers_text`),
-                    removePath(`${protectedBase}/config`),
-                    removePath(`${protectedBase}/requiredScorers`),
                     removePath(`projects/${projectId}/entries`),
-                    removePath(`projects/${projectId}/publicSettings`),
                     removePath(`projects/${projectId}/disclosure`),
                 ]);
 
-                showAdminToast('プロジェクトを削除しました。トップページに戻ります。', 'success', 3000);
-                session.clear();
-                setTimeout(() => { location.href = 'index.html'; }, 2000);
+                showAdminToast('プロジェクトをリセットしました。ページを再読み込みします。', 'success', 3000);
+                setTimeout(() => { location.reload(); }, 2000);
             } catch (e) {
-                console.error('削除エラー:', e);
-                showAdminToast('削除エラー: ' + e.message, 'error');
+                console.error('リセットエラー:', e);
+                showAdminToast('リセットエラー: ' + e.message, 'error');
             }
         }
 

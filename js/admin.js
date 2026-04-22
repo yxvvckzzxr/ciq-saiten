@@ -143,7 +143,11 @@
                     document.getElementById('entry-period-end').value = ec.periodEnd;
                     document.getElementById('dt-end-display').textContent = formatDtDisplay(ec.periodEnd);
                 }
-                if (ec.maxEntries) {
+                if (ec.maxEntries && ec.maxEntries > 0) {
+                    document.getElementById('max-entries-toggle').checked = true;
+                    document.getElementById('max-entries-status').textContent = `${ec.maxEntries}人`;
+                    document.getElementById('max-entries-status').className = 'status-badge status-open';
+                    document.getElementById('max-entries-input-area').style.display = 'block';
                     document.getElementById('setting-max-entries').value = ec.maxEntries;
                 }
                 updateEntryOpenStatus();
@@ -158,19 +162,8 @@
 
             document.getElementById('stat-total').textContent = totalQuestions;
 
-            // 必要採点者数の読み込み
-            const reqScorers = await dbGet(`projects/${projectId}/protected/${secretHash}/requiredScorers`);
-            if (reqScorers) document.getElementById('required-scorers').value = reqScorers;
-
-            // スコアありで採点者数ロック
-            const scores = await dbShallow(`projects/${projectId}/protected/${secretHash}/scores`);
-            const hasScores = scores && Object.keys(scores).filter(k => !k.startsWith('__')).length > 0;
-            if (hasScores) {
-                const scorerBtns = document.getElementById('required-scorers')?.closest('.number-spinner-wrap')?.querySelectorAll('.number-spinner-btn');
-                scorerBtns?.forEach(b => b.disabled = true);
-                document.getElementById('required-scorers')?.closest('.config-row')?.insertAdjacentHTML('beforeend',
-                    '<div class="lock-reason"><i class="fa-solid fa-lock"></i> 採点が開始されているため変更できません</div>');
-            }
+            // 必要採点者数を3人に固定（DB書き込み）
+            await dbSet(`projects/${projectId}/protected/${secretHash}/requiredScorers`, 3);
 
             // エントリ番号取得
             try {

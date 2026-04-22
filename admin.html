@@ -144,11 +144,21 @@
 
                 <!-- 定員設定 -->
                 <div class="config-panel">
-                    <div class="period-heading"><i class="fa-solid fa-users"></i> 定員<span class="period-hint">（0 = 制限なし。超過分はキャンセル待ちに）</span></div>
-                    <div class="number-input-group" style="max-width:200px;">
-                        <button type="button" class="number-btn" onclick="adjustNumberInput('setting-max-entries', -10)">−</button>
-                        <input type="number" id="setting-max-entries" min="0" max="9999" value="0" class="number-input" onchange="saveEntryPeriod()" />
-                        <button type="button" class="number-btn" onclick="adjustNumberInput('setting-max-entries', 10)">+</button>
+                    <div class="config-row">
+                        <label class="toggle-switch"><input type="checkbox" id="max-entries-toggle" onchange="toggleMaxEntries()"><span class="toggle-slider"></span></label>
+                        <div class="toggle-info">
+                            <div class="toggle-info-title">定員制限</div>
+                            <div class="toggle-info-desc">ONにすると定員を超えたエントリーはキャンセル待ちになります</div>
+                        </div>
+                        <span id="max-entries-status" class="status-badge status-closed">制限なし</span>
+                    </div>
+                    <div id="max-entries-input-area" style="display:none;margin-top:12px;">
+                        <div class="number-spinner-wrap" style="max-width:180px;">
+                            <button type="button" class="number-spinner-btn" onclick="adjustNumberInput('setting-max-entries', -10)"><i class="fa-solid fa-minus"></i></button>
+                            <input type="number" id="setting-max-entries" min="1" max="9999" value="100" onchange="saveEntryPeriod()" />
+                            <button type="button" class="number-spinner-btn" onclick="adjustNumberInput('setting-max-entries', 10)"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                        <div style="font-size:11px;color:var(--text-muted);margin-top:4px;"><i class="fa-solid fa-circle-info"></i> 10人単位で増減</div>
                     </div>
                 </div>
 
@@ -290,7 +300,7 @@
                     <div class="config-row" style="flex-wrap:wrap;gap:12px;align-items:flex-start;">
                         <div>
                             <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">方式</label>
-                            <select id="tiebreak-mode" style="font-size:13px;padding:6px 10px;border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-main);border:1px solid var(--glass-border);" onchange="document.getElementById('tiebreak-approx').style.display=this.value==='approx'?'flex':'none'">
+                            <select id="tiebreak-mode" class="custom-select" onchange="document.getElementById('tiebreak-approx').style.display=this.value==='approx'?'flex':'none'">
                                 <option value="streak">連答（最長連続正解数）</option>
                                 <option value="approx">近似値</option>
                             </select>
@@ -318,7 +328,7 @@
                     <div class="config-row" style="flex-wrap:wrap;gap:8px;">
                         <div>
                             <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">名前区切り</label>
-                            <select id="csv-name-sep" style="font-size:13px;padding:6px 10px;border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-main);border:1px solid var(--glass-border);">
+                            <select id="csv-name-sep" class="custom-select">
                                 <option value="fullspace">全角スペース</option>
                                 <option value="halfspace">半角スペース</option>
                                 <option value="none">区切りなし</option>
@@ -326,7 +336,7 @@
                         </div>
                         <div>
                             <label style="font-size:12px;color:var(--text-muted);display:block;margin-bottom:4px;">文字数固定</label>
-                            <select id="csv-name-fixed" style="font-size:13px;padding:6px 10px;border-radius:var(--radius-md);background:var(--bg-secondary);color:var(--text-main);border:1px solid var(--glass-border);">
+                            <select id="csv-name-fixed" class="custom-select">
                                 <option value="0">なし</option>
                                 <option value="4">4文字</option>
                                 <option value="5">5文字</option>
@@ -388,25 +398,12 @@
                 </div>
             </div>
 
-            <div class="section glass-panel">
-                <h2><i class="fa-solid fa-user-check"></i> 採点設定</h2>
-                <div class="config-panel config-row">
-                    <div class="toggle-info">
-                        <div class="toggle-info-title">必要採点者数</div>
-                        <div class="toggle-info-desc">1問あたりの採点を行う人数です。採点開始後は変更できません。</div>
-                    </div>
-                    <div class="number-spinner-wrap">
-                        <button type="button" class="number-spinner-btn" onclick="adjustRequiredScorers(-1)"><i class="fa-solid fa-minus"></i></button>
-                        <input type="number" id="required-scorers" value="3" min="1" max="4" readonly />
-                        <button type="button" class="number-spinner-btn" onclick="adjustRequiredScorers(1)"><i class="fa-solid fa-plus"></i></button>
-                    </div>
-                </div>
-            </div>
+
 
             <div class="section glass-panel danger-zone">
-                <h2 class="danger-title"><i class="fa-solid fa-skull-crossbones"></i> 危険な操作</h2>
-                <p class="desc-text">プロジェクトを完全に削除します。元に戻せません。</p>
-                <button class="btn danger" onclick="deleteProject()"><i class="fa-solid fa-trash"></i> プロジェクト削除</button>
+                <h2 class="danger-title"><i class="fa-solid fa-triangle-exclamation"></i> 危険な操作</h2>
+                <p class="desc-text">エントリー・採点データなどプロジェクト内の全データを削除し、初期状態に戻します。プロジェクト自体は残ります。</p>
+                <button class="btn danger" onclick="resetProject()"><i class="fa-solid fa-rotate-left"></i> プロジェクトリセット</button>
             </div>
         </div>
 
