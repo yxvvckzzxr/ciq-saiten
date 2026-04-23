@@ -147,9 +147,10 @@ const params = new URLSearchParams(location.search);
                 }
 
             } catch (err) {
+                console.error('Entry submission error:', err, err.stack);
                 btn.disabled = false;
                 btn.textContent = 'エントリーを確定する';
-                showStatus('エラーが発生しました: ' + err.message, 'error');
+                showStatus('エラーが発生しました: ' + err.message + ' (' + (err.code || err.name || '') + ')', 'error');
             }
         });
 
