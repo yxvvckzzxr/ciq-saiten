@@ -85,13 +85,7 @@ const params = new URLSearchParams(location.search);
 
             const entryNum = targetData.entryNumber;
 
-            // 確認ダイアログ
-            if (!confirm(`受付番号 ${entryNum} のエントリーをキャンセルします。\nこの操作は取り消せません。よろしいですか？`)) {
-                btn.disabled = false; btn.textContent = 'キャンセルを確定する';
-                showStatus('', '');
-                document.getElementById('status-msg').style.display = 'none';
-                return;
-            }
+
 
             // 更新処理
             await dbUpdate(`projects/${projectId}/entries/${targetKey}`, {

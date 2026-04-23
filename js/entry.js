@@ -54,10 +54,7 @@ const params = new URLSearchParams(location.search);
                 showStatus('正しいメールアドレスを入力してください。', 'error');
                 return;
             }
-            // 送信前確認
-            if (!confirm(`以下の内容でエントリーします。\n\n氏名: ${familyName} ${firstName}\nメール: ${email}\n\nよろしいですか？`)) {
-                return;
-            }
+
 
             btn.disabled = true;
             btn.textContent = '処理中...';
