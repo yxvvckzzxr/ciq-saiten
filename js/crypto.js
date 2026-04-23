@@ -88,13 +88,23 @@ const AppCrypto = {
             false,
             ["encrypt"]
         );
+        // ハイブリッド暗号化: AES鍵を生成→データをAES暗号化→AES鍵をRSA暗号化
+        const aesKey = await crypto.subtle.generateKey({ name: "AES-GCM", length: 256 }, true, ["encrypt"]);
+        const iv = crypto.getRandomValues(new Uint8Array(12));
         const enc = new TextEncoder();
-        const encrypted = await crypto.subtle.encrypt(
-            { name: "RSA-OAEP" },
-            publicKey,
-            enc.encode(text)
-        );
-        return btoa(String.fromCharCode.apply(null, new Uint8Array(encrypted)));
+        const encryptedData = await crypto.subtle.encrypt({ name: "AES-GCM", iv }, aesKey, enc.encode(text));
+        const rawAesKey = await crypto.subtle.exportKey("raw", aesKey);
+        const encryptedKey = await crypto.subtle.encrypt({ name: "RSA-OAEP" }, publicKey, rawAesKey);
+        // IV(12) + encryptedKey length(2) + encryptedKey + encryptedData を結合
+        const ekBytes = new Uint8Array(encryptedKey);
+        const edBytes = new Uint8Array(encryptedData);
+        const combined = new Uint8Array(12 + 2 + ekBytes.length + edBytes.length);
+        combined.set(iv, 0);
+        combined[12] = (ekBytes.length >> 8) & 0xff;
+        combined[13] = ekBytes.length & 0xff;
+        combined.set(ekBytes, 14);
+        combined.set(edBytes, 14 + ekBytes.length);
+        return btoa(String.fromCharCode.apply(null, combined));
     },
 
     async decryptRSA(base64Data, privateKeyJwk) {
@@ -105,12 +115,21 @@ const AppCrypto = {
             false,
             ["decrypt"]
         );
-        const data = new Uint8Array(atob(base64Data).split('').map(c => c.charCodeAt(0)));
-        const decrypted = await crypto.subtle.decrypt(
-            { name: "RSA-OAEP" },
-            privateKey,
-            data
-        );
+        const combined = new Uint8Array(atob(base64Data).split('').map(c => c.charCodeAt(0)));
+        // 旧形式（直接RSA暗号化）かハイブリッド形式かを判定
+        if (combined.length <= 256) {
+            // 旧形式: RSA-2048の出力は256バイト固定
+            const decrypted = await crypto.subtle.decrypt({ name: "RSA-OAEP" }, privateKey, combined);
+            return new TextDecoder().decode(decrypted);
+        }
+        // ハイブリッド形式: IV(12) + keyLen(2) + encryptedKey + encryptedData
+        const iv = combined.slice(0, 12);
+        const ekLen = (combined[12] << 8) | combined[13];
+        const encryptedKey = combined.slice(14, 14 + ekLen);
+        const encryptedData = combined.slice(14 + ekLen);
+        const rawAesKey = await crypto.subtle.decrypt({ name: "RSA-OAEP" }, privateKey, encryptedKey);
+        const aesKey = await crypto.subtle.importKey("raw", rawAesKey, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
+        const decrypted = await crypto.subtle.decrypt({ name: "AES-GCM", iv }, aesKey, encryptedData);
         return new TextDecoder().decode(decrypted);
     }
 };
