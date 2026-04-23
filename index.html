@@ -77,17 +77,17 @@
         <label><i class="fa-solid fa-fingerprint"></i> プロジェクトID</label>
         <div class="credential-row">
           <input type="text" id="success-id" readonly />
-          <button class="btn standard" onclick="copyToClipboard('success-id', this)">コピー</button>
+          <button class="btn standard credential-copy-btn" onclick="copyToClipboard('success-id', this)"><i class="fa-solid fa-copy"></i></button>
         </div>
         <label><i class="fa-solid fa-crown crown-icon"></i> 管理者用 マスターパスワード (コピーして大切に保管)</label>
         <div class="credential-row">
           <input type="text" id="success-admin-pwd" readonly />
-          <button class="btn master" onclick="copyToClipboard('success-admin-pwd', this)">コピー</button>
+          <button class="btn master credential-copy-btn" onclick="copyToClipboard('success-admin-pwd', this)"><i class="fa-solid fa-copy"></i></button>
         </div>
         <label><i class="fa-solid fa-users"></i> 採点者用 アクセスコード</label>
         <div class="credential-row">
           <input type="text" id="success-pwd" readonly />
-          <button class="btn standard" onclick="copyToClipboard('success-pwd', this)">コピー</button>
+          <button class="btn standard credential-copy-btn" onclick="copyToClipboard('success-pwd', this)"><i class="fa-solid fa-copy"></i></button>
         </div>
       </div>
       <button class="btn" onclick="location.href='admin.html'">管理画面へ進む <i class="fa-solid fa-gear"></i></button>
