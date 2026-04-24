@@ -172,7 +172,6 @@
                     <div class="link-row"><span class="link-label"><i class="fa-solid fa-user-xmark"></i> キャンセル</span><a id="cancel-link" href="#" target="_blank" hidden></a><button class="btn secondary link-btn-sm" onclick="window.open(document.getElementById('cancel-link').href)"><i class="fa-solid fa-arrow-up-right-from-square"></i></button><button class="btn secondary link-btn-sm" onclick="copyUrl('cancel-link', this)"><i class="fa-solid fa-copy"></i></button></div>
                     <div class="link-row"><span class="link-label"><i class="fa-solid fa-chart-column"></i> 成績照会</span><a id="disclosure-link" href="#" target="_blank" hidden></a><button class="btn secondary link-btn-sm" onclick="window.open(document.getElementById('disclosure-link').href)"><i class="fa-solid fa-arrow-up-right-from-square"></i></button><button class="btn secondary link-btn-sm" onclick="copyUrl('disclosure-link', this)"><i class="fa-solid fa-copy"></i></button></div>
                 </div>
-                <button class="btn secondary mt-md" onclick="exportEntriesCSV()"><i class="fa-solid fa-download"></i> 参加者名簿CSV</button>
             </div>
             <div class="section glass-panel">
                 <h2><i class="fa-solid fa-address-book"></i> 参加者一覧</h2>
@@ -194,6 +193,7 @@
                         </tbody>
                     </table>
                 </div>
+                <button class="btn secondary mt-md" onclick="exportEntriesCSV()"><i class="fa-solid fa-download"></i> 参加者名簿CSV</button>
             </div>
         </div>
 
