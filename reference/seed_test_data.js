@@ -25,6 +25,8 @@
 
   console.log('1/2: エントリー作成中...');
   const entryUpdates = {};
+  const entryStartTime = Date.now() - 2 * 60 * 60 * 1000; // 2時間前
+  const gracePeriodMs = 30 * 60 * 1000;
   for (let i = 1; i <= ENTRY_COUNT; i++) {
     const uuid = crypto.randomUUID();
     const lnIdx = Math.floor(Math.random() * lastNames.length);
@@ -52,20 +54,30 @@
     const emailHash = await AppCrypto.hashPassword(email);
     const pwHash = await AppCrypto.hashPassword(pw);
 
+    // タイムスタンプ: 1-60番は30分以内、61-120番は30分以降
+    let ts;
+    if (i <= 60) {
+      ts = entryStartTime + (i - 1) * 30000;
+    } else {
+      ts = entryStartTime + gracePeriodMs + (i - 60) * 30000;
+    }
+
     entryUpdates[uuid] = {
       uuid, entryNumber: i, encryptedPII, emailHash,
       disclosurePw: pwHash,
       entryName: eName, affiliation: school, grade, message: msg,
       isChubu,
       status: 'registered', checkedIn: false,
-      timestamp: Date.now() - (ENTRY_COUNT - i) * 60000
+      timestamp: ts
     };
 
     if (i % 20 === 0) console.log(`  ... ${i}/${ENTRY_COUNT} 人作成`);
   }
   await dbUpdate(`projects/${projectId}/entries`, entryUpdates);
   await dbSet(`projects/${projectId}/publicSettings/lastEntryNumber`, ENTRY_COUNT);
-  console.log(`  ✅ ${ENTRY_COUNT}件のエントリー作成完了`);
+  // エントリー開始時刻を保存（優先順位計算に必要）
+  await dbSet(`projects/${projectId}/publicSettings/periodStart`, new Date(entryStartTime).toISOString());
+  console.log(`  ✅ ${ENTRY_COUNT}件のエントリー作成完了（periodStart設定済み）`);
 
   // 答案キーを作成（admin画面のentryNumbers取得に必要）
   const answersKeys = {};

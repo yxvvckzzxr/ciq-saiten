@@ -30,10 +30,9 @@ const params = new URLSearchParams(location.search);
         const pubSettings = await dbGet(`projects/${projectId}/publicSettings`) || {};
         maxEntries = pubSettings.maxEntries || 0;
 
-        // エントリー開始時刻取得
-        const ec = await dbGet(`projects/${projectId}/protected/${secretHash}/entryConfig`);
-        if (ec && ec.periodStart) {
-            entryOpenTime = new Date(ec.periodStart).getTime();
+        // エントリー開始時刻取得（publicSettingsから）
+        if (pubSettings.periodStart) {
+            entryOpenTime = new Date(pubSettings.periodStart).getTime();
         }
 
         // リストを常に表示
