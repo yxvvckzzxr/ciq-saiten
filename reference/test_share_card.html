@@ -8,15 +8,15 @@
 </head>
 <body>
     <div id="output">Generating...</div>
-    <script src="js/share_card.js"></script>
+    <script src="../js/share_card.js"></script>
     <script>
         (async () => {
             await document.fonts.ready;
             const blob = await ShareCard.generate({
                 projectName: 'CIQ the 1st',
-                rank: '12位',
-                score: '64',
-                streaks: [8, 5]
+                rank: '200th',
+                score: '85',
+                streaks: [5, 3]
             });
             const url = URL.createObjectURL(blob);
             document.getElementById('output').innerHTML = `<img src="${url}">`;

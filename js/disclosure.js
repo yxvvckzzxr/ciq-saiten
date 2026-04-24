@@ -164,36 +164,27 @@ const params = new URLSearchParams(location.search);
     }
 
     function shareToX() {
-        nativeShare(() => {
-            downloadBlob();
-            copyShareText();
-            const text = encodeURIComponent(getShareText());
-            window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
-        });
+        downloadBlob();
+        const text = encodeURIComponent(getShareText());
+        window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
     }
 
     function shareToInstagram() {
-        nativeShare(() => {
-            downloadBlob();
-            copyShareText();
-            alert('画像を保存しました。Instagramアプリで投稿してください。\nキャプションはクリップボードにコピー済みです。');
-        });
+        downloadBlob();
+        copyShareText();
+        alert('画像を保存しました。Instagramアプリで投稿してください。\nキャプションはクリップボードにコピー済みです。');
     }
 
     function shareToLINE() {
-        nativeShare(() => {
-            downloadBlob();
-            const text = encodeURIComponent(getShareText());
-            window.open(`https://social-plugins.line.me/lineit/share?text=${text}`, '_blank');
-        });
+        downloadBlob();
+        const text = encodeURIComponent(getShareText());
+        window.open(`https://social-plugins.line.me/lineit/share?text=${text}`, '_blank');
     }
 
     function shareToFacebook() {
-        nativeShare(() => {
-            downloadBlob();
-            copyShareText();
-            window.open(`https://www.facebook.com/sharer/sharer.php`, '_blank');
-        });
+        downloadBlob();
+        copyShareText();
+        window.open('https://www.facebook.com/sharer/sharer.php', '_blank');
     }
 
     function downloadShareImage() {
