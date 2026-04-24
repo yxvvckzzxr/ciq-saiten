@@ -133,7 +133,8 @@ const params = new URLSearchParams(location.search);
         }
     }
 
-    async function nativeShare(fallbackFn) {
+    async function shareWithFile(fallbackFn) {
+        if (!shareBlob) return;
         if (navigator.share && navigator.canShare) {
             const file = new File([shareBlob], 'ciq_result.png', { type: 'image/png' });
             const shareData = { text: getShareText(), files: [file] };
@@ -146,7 +147,6 @@ const params = new URLSearchParams(location.search);
                 }
             }
         }
-        // フォールバック
         if (fallbackFn) fallbackFn();
     }
 
@@ -159,32 +159,25 @@ const params = new URLSearchParams(location.search);
     }
 
     function copyShareText() {
-        const text = getShareText();
-        navigator.clipboard.writeText(text).catch(() => {});
+        navigator.clipboard.writeText(getShareText()).catch(() => {});
     }
 
     function shareToX() {
-        downloadBlob();
-        const text = encodeURIComponent(getShareText());
-        window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+        shareWithFile(() => {
+            // デスクトップ: 画像DL + テキストでX投稿画面を開く
+            downloadBlob();
+            const text = encodeURIComponent(getShareText());
+            window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+        });
     }
 
     function shareToInstagram() {
-        downloadBlob();
-        copyShareText();
-        alert('画像を保存しました。Instagramアプリで投稿してください。\nキャプションはクリップボードにコピー済みです。');
-    }
-
-    function shareToLINE() {
-        downloadBlob();
-        const text = encodeURIComponent(getShareText());
-        window.open(`https://social-plugins.line.me/lineit/share?text=${text}`, '_blank');
-    }
-
-    function shareToFacebook() {
-        downloadBlob();
-        copyShareText();
-        window.open('https://www.facebook.com/sharer/sharer.php', '_blank');
+        shareWithFile(() => {
+            // デスクトップ: 画像DL + テキストコピー + 案内
+            downloadBlob();
+            copyShareText();
+            alert('画像を保存しました。Instagramアプリで投稿してください。\nキャプションはクリップボードにコピー済みです。');
+        });
     }
 
     function downloadShareImage() {
