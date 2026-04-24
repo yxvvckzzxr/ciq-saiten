@@ -137,28 +137,44 @@
             const results = entryNumbers.map(en => {
                 const answers = []; for (let q = 1; q <= totalQuestions; q++) { const fd = scoresData[`__final__q${q}`] || {}; const r = fd[en] === 'correct' ? 1 : 0; answers.push(r); }
                 const score = answers.reduce((a, b) => a + b, 0);
-                const streaks = []; let cur = 0; answers.forEach(a => { if (a === 1) cur++; else { if (cur > 0) streaks.push(cur); cur = 0; } }); if (cur > 0) streaks.push(cur);
+                const streaks = []; let cur = 0;
+                answers.forEach(a => { if (a === 1) { cur++; } else { streaks.push(cur); cur = 0; } });
+                streaks.push(cur); // 最後の区間
                 const m = masterData[en] || {};
                 const name = formatCsvName(m.familyName || '', m.firstName || '', m.entryName || '', m.useEntryName, sepType, fixedLen);
                 return { entryNumber: en, name, affiliation: m.affiliation || '', grade: m.grade || '', score, answers, streaks };
             });
 
-            // ソート: 点数降順 → 連答（最長連続正解数）で同点処理
+            // ソート: 点数降順 → 連答（第1連答 → 第2連答 → ...）で同点処理
             results.sort((a, b) => {
                 if (b.score !== a.score) return b.score - a.score;
-                // 連答: 最長連続正解数で比較
-                const maxA = a.streaks.length ? Math.max(...a.streaks) : 0;
-                const maxB = b.streaks.length ? Math.max(...b.streaks) : 0;
-                if (maxA !== maxB) return maxB - maxA;
-                // それでも同じなら問題番号順
-                for (let i = 0; i < totalQuestions; i++) { const d = b.answers[i] - a.answers[i]; if (d !== 0) return d; }
+                // 連答: 第1連答 → 第2連答 → ... の順で比較
+                const maxLen = Math.max(a.streaks.length, b.streaks.length);
+                for (let i = 0; i < maxLen; i++) {
+                    const sa = a.streaks[i] || 0;
+                    const sb = b.streaks[i] || 0;
+                    if (sa !== sb) return sb - sa;
+                }
                 return 0;
             });
 
-            const headers = ['\u6240\u5c5e', '\u5b66\u5e74', '\u6c0f\u540d'];
+            // 最大連答数を算出（列数統一用）
+            const maxStreakLen = Math.max(...results.map(r => r.streaks.length), 1);
+            const streakHeaders = [];
+            for (let i = 0; i < maxStreakLen; i++) streakHeaders.push(`連答${i + 1}`);
+
+            const headers = ['順位', '所属', '学年', '氏名', '点数', ...streakHeaders];
             const rows = [headers];
-            results.forEach(r => {
-                rows.push([r.affiliation, r.grade, `"${r.name.replace(/"/g, '""')}"`]);
+            let currentRank = 1;
+            results.forEach((r, idx) => {
+                if (idx > 0) {
+                    const prev = results[idx - 1];
+                    const same = prev.score === r.score && JSON.stringify(prev.streaks) === JSON.stringify(r.streaks);
+                    if (!same) currentRank = idx + 1;
+                }
+                const streakCols = [];
+                for (let i = 0; i < maxStreakLen; i++) streakCols.push(r.streaks[i] ?? '');
+                rows.push([currentRank, r.affiliation, r.grade, `"${r.name.replace(/"/g, '""')}"`, r.score, ...streakCols]);
             });
             const csv = rows.map(r => r.join(',')).join('\n'); const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'ciq_result.csv'; a.click();
         }

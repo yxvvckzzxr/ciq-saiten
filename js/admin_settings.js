@@ -339,22 +339,72 @@
 
         async function generateDisclosure() {
             try {
-                const disclosureData = {};
-                // すべてのentryNumbersについてスコアを計算
-                entryNumbers.forEach(en => {
-                    const results = {};
+                // PII復号して氏名を取得
+                const entriesData = await dbGet(`projects/${projectId}/entries`);
+                const nameMap = {};
+                if (entriesData) {
+                    const privJwk = JSON.parse(session.get('privateKeyJwk'));
+                    for (const v of Object.values(entriesData)) {
+                        if (!v.entryNumber) continue;
+                        let displayName = `No.${String(v.entryNumber).padStart(3,'0')}`;
+                        if (v.encryptedPII) {
+                            try {
+                                const pii = JSON.parse(await AppCrypto.decryptRSA(v.encryptedPII, privJwk));
+                                displayName = `${pii.familyName} ${pii.firstName}`;
+                            } catch(e) {}
+                        }
+                        nameMap[v.entryNumber] = displayName;
+                    }
+                }
+
+                // スコアと連答を計算
+                const ranked = entryNumbers.map(en => {
+                    const answers = [];
                     for (let q = 1; q <= totalQuestions; q++) {
                         const fd = scoresData[`__final__q${q}`] || {};
-                        // __final__ がある場合のみ確定結果を使用、なければ未確定(hold)
-                        results[`q${q}`] = fd[en] || 'hold';
+                        answers.push(fd[en] === 'correct' ? 1 : 0);
                     }
-                    const score = Object.values(results).filter(x => x === 'correct').length;
-                    disclosureData[en] = {
-                        score,
+                    const score = answers.reduce((a, b) => a + b, 0);
+                    // 連答: 前から順に区切る（0連答も記録）
+                    const streaks = []; let cur = 0;
+                    answers.forEach(a => { if (a === 1) { cur++; } else { streaks.push(cur); cur = 0; } });
+                    streaks.push(cur);
+                    return { en, score, streaks };
+                });
+
+                // ソート: 点数降順 → 第1連答 → 第2連答 → ...
+                ranked.sort((a, b) => {
+                    if (b.score !== a.score) return b.score - a.score;
+                    const maxLen = Math.max(a.streaks.length, b.streaks.length);
+                    for (let i = 0; i < maxLen; i++) {
+                        const sa = a.streaks[i] || 0;
+                        const sb = b.streaks[i] || 0;
+                        if (sa !== sb) return sb - sa;
+                    }
+                    return 0;
+                });
+
+                // 順位付与（同点同順位）
+                const ordinal = n => { const s = ['th','st','nd','rd']; const v = n % 100; return n + (s[(v-20)%10] || s[v] || s[0]); };
+                const totalEntries = ranked.length;
+                const disclosureData = {};
+                let currentRank = 1;
+                ranked.forEach((r, idx) => {
+                    if (idx > 0) {
+                        const prev = ranked[idx - 1];
+                        const same = prev.score === r.score && JSON.stringify(prev.streaks) === JSON.stringify(r.streaks);
+                        if (!same) currentRank = idx + 1;
+                    }
+                    disclosureData[r.en] = {
+                        displayName: nameMap[r.en] || `No.${String(r.en).padStart(3,'0')}`,
+                        score: r.score,
+                        rank: ordinal(currentRank),
+                        totalEntries,
                         totalQuestions,
-                        results
+                        streaks: r.streaks
                     };
                 });
+
                 await dbUpdate(`projects/${projectId}/disclosure`, disclosureData);
             } catch (e) {
                 console.error('開示連携エラー:', e);

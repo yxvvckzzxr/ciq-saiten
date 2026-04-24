@@ -71,7 +71,7 @@ const params = new URLSearchParams(location.search);
                 errEl.style.display = 'block'; btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-unlock"></i> 成績を確認する'; return;
             }
 
-            showResult(entryData.entryName || `受付番号 ${num}`, disc.score, disc.results, disc.totalQuestions || 100);
+            showResult(disc);
 
         } catch(e) {
             errEl.textContent = 'エラーが発生しました。もう一度お試しください。';
@@ -80,22 +80,32 @@ const params = new URLSearchParams(location.search);
         btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-unlock"></i> 成績を確認する';
     }
 
-    function showResult(name, score, results, total) {
+    function showResult(disc) {
         document.getElementById('login-card').style.display = 'none';
         document.getElementById('result-card').style.display = 'block';
-        document.getElementById('result-name').textContent = name;
-        document.getElementById('result-score').textContent = score;
-        document.getElementById('result-total').textContent = total;
+        document.getElementById('result-name').textContent = disc.displayName || '';
+        document.getElementById('result-rank').textContent = disc.rank || '';
+        document.getElementById('result-rank-sub').textContent = `/ ${disc.totalEntries || '?'}`;
+        document.getElementById('result-score').textContent = disc.score;
+        document.getElementById('result-total').textContent = `${disc.score} / ${disc.totalQuestions || 100}`;
 
-        const grid = document.getElementById('result-grid');
-        grid.innerHTML = '';
-        for (let i = 1; i <= total; i++) {
-            const r = results?.[`q${i}`] || 'wrong';
-            const cell = document.createElement('div');
-            cell.className = `result-cell ${r === 'correct' ? 'correct' : 'wrong'}`;
-            cell.innerHTML = `<span class="q-num">${i}</span>${r === 'correct' ? '○' : '×'}`;
-            grid.appendChild(cell);
+        // 連答表示
+        const streaksEl = document.getElementById('result-streaks');
+        if (disc.streaks && disc.streaks.length > 0) {
+            const show = disc.streaks.slice(0, 2);
+            const streakItems = show.map((s, i) => 
+                `<span class="streak-item"><span class="streak-label">${ordinal(i + 1)}</span><span class="streak-val">${s}</span></span>`
+            ).join('');
+            streaksEl.innerHTML = `<div class="streak-title">Streak</div><div class="streak-list">${streakItems}</div>`;
+        } else {
+            streaksEl.innerHTML = '';
         }
+    }
+
+    function ordinal(n) {
+        const s = ['th','st','nd','rd'];
+        const v = n % 100;
+        return n + (s[(v-20)%10] || s[v] || s[0]);
     }
 
     function showLogin() {
