@@ -3,7 +3,6 @@ const firebaseConfig = {
   apiKey: "AIzaSyBddMg4lPD3PNMbFVgCANF3CSWhRubCWws",
   authDomain: "ciq-digital.firebaseapp.com",
   projectId: "ciq-digital",
-  storageBucket: "ciq-digital.firebasestorage.app",
   messagingSenderId: "863546263613",
   appId: "1:863546263613:web:bc5c52656b35ff74a0c254",
   measurementId: "G-N32TSS5J4J",

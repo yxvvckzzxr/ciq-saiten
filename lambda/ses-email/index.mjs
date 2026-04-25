@@ -120,12 +120,40 @@ function signCode(code, email, expiresAt) {
   return createHmac('sha256', API_KEY).update(payload).digest('hex');
 }
 
+// ── レート制限（メールアドレスごと、Lambdaインスタンス内） ──
+const rateLimitMap = new Map();
+const RATE_LIMIT_MS = 2 * 60 * 1000; // 2分間隔
+function checkRateLimit(email) {
+  const key = email.toLowerCase();
+  const now = Date.now();
+  const last = rateLimitMap.get(key);
+  if (last && now - last < RATE_LIMIT_MS) return false;
+  rateLimitMap.set(key, now);
+  // 古いエントリをクリーンアップ（メモリ肥大化防止）
+  if (rateLimitMap.size > 1000) {
+    for (const [k, t] of rateLimitMap) {
+      if (now - t > RATE_LIMIT_MS) rateLimitMap.delete(k);
+    }
+  }
+  return true;
+}
+
+// ── 許可Origin ──
+const ALLOWED_ORIGINS = [
+  'https://chromquiz.github.io',
+  'http://localhost:8000',
+  'http://127.0.0.1:8000',
+];
+
 // ── ハンドラー ──────────────────────────────────
 
 export const handler = async (event) => {
+  const origin = event.headers?.origin || '';
+  const corsOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0];
+
   const headers = {
     "Content-Type": "application/json",
-    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Origin": corsOrigin,
     "Access-Control-Allow-Headers": "Content-Type, X-Api-Key",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
@@ -133,6 +161,11 @@ export const handler = async (event) => {
   // CORS preflight
   if (event.requestContext?.http?.method === "OPTIONS") {
     return { statusCode: 200, headers, body: "" };
+  }
+
+  // Origin検証（preflight以外）
+  if (!ALLOWED_ORIGINS.includes(origin)) {
+    return { statusCode: 403, headers, body: JSON.stringify({ error: "Origin not allowed" }) };
   }
 
   try {
@@ -145,6 +178,13 @@ export const handler = async (event) => {
     }
 
     const { type, to, data } = body;
+
+    // レート制限チェック（メール送信系のみ）
+    if ((type === 'send_verification' || templates[type]) && to) {
+      if (!checkRateLimit(to)) {
+        return { statusCode: 429, headers, body: JSON.stringify({ error: "Too many requests. Please wait." }) };
+      }
+    }
 
     // ── メール認証コード送信 ──
     if (type === 'send_verification') {

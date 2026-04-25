@@ -322,7 +322,7 @@ document.addEventListener('keydown', (e) => {
                 // 個別に書き込む（既存の管理者決定を上書きしない）
                 const updates = {};
                 for (const [en, result] of Object.entries(finals)) {
-                    updates[`__final__q${q}/${en}`] = result;
+                    updates[`__auto_final__q${q}/${en}`] = result;
                 }
                 await dbUpdate(`projects/${projectId}/protected/${secretHash}/scores`, updates);
             }

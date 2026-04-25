@@ -11,6 +11,7 @@
         const auth = requireAuth({ requireAdmin: true });
         if (!auth) throw new Error('auth');
         const { projectId, secretHash } = auth;
+        const adminHash = session.get('adminHash');
 
         document.getElementById('project-id-display').innerHTML = `<i class="fa-solid fa-copy"></i> ${projectId}`;
         const menuName = document.getElementById('menu-scorer-name');
@@ -175,16 +176,36 @@
                 console.error('エントリ番号取得エラー:', e);
             }
 
-            // リアルタイムリスナーでスコア取得
+            // リアルタイムリスナーでスコア取得（scorerHash + adminHashマージ）
+            let _scorerScores = {};
+            let _adminFinals = {};
+            const _mergeScores = () => {
+                scoresData = { ..._scorerScores };
+                // adminHash側のfinalResultsを __final__qN 形式でマージ
+                for (const [key, val] of Object.entries(_adminFinals)) {
+                    scoresData[`__final__${key}`] = val;
+                }
+                // scorerHash側の __auto_final__ もフォールバックとしてマージ
+                for (const key of Object.keys(_scorerScores)) {
+                    if (key.startsWith('__auto_final__')) {
+                        const finalKey = key.replace('__auto_final__', '__final__');
+                        if (!scoresData[finalKey]) scoresData[finalKey] = _scorerScores[key];
+                    }
+                }
+                updateStatsView();
+            };
             const scorePoller = new Poller(
                 `projects/${projectId}/protected/${secretHash}/scores`,
-                (data) => {
-                    scoresData = data || {};
-                    updateStatsView();
-                },
+                (data) => { _scorerScores = data || {}; _mergeScores(); },
                 5000
             );
             scorePoller.start();
+            const finalPoller = new Poller(
+                `projects/${projectId}/protected/${adminHash}/finalResults`,
+                (data) => { _adminFinals = data || {}; _mergeScores(); },
+                5000
+            );
+            finalPoller.start();
 
             // 模範解答はオンデマンド → prep/模範解答タブで初回ロード
             const modelData = await dbGet(`projects/${projectId}/protected/${secretHash}/answers_text`);

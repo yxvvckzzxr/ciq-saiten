@@ -3,6 +3,7 @@
 const auth = requireAuth({ requireAdmin: true });
 if (!auth) throw new Error('auth');
 const { projectId, secretHash } = auth;
+const adminHash = session.get('adminHash');
 
         let answersData = {};
         let answersText = {};
@@ -38,15 +39,30 @@ const { projectId, secretHash } = auth;
             }
 
             // スコアリスナー即開始（画像は render 後に遅延取得）
+            // scorerHash側のスコア + adminHash側の確定結果を両方監視
+            let scorerScores = {};
+            let adminFinals = {};
+            const mergeData = () => {
+                scoresData = { ...scorerScores };
+                // adminHash側の __final__ を scoresData にマージ
+                for (const [key, val] of Object.entries(adminFinals)) {
+                    scoresData[key] = val;
+                }
+                render();
+            };
             const scorePoller = new Poller(
                 `projects/${projectId}/protected/${secretHash}/scores`,
-                (data) => {
-                    scoresData = data || {};
-                    render();
-                },
+                (data) => { scorerScores = data || {}; mergeData(); },
                 3000
             );
             scorePoller.start();
+            // adminHash 側の確定結果を監視
+            const finalPoller = new Poller(
+                `projects/${projectId}/protected/${adminHash}/finalResults`,
+                (data) => { adminFinals = data || {}; mergeData(); },
+                5000
+            );
+            finalPoller.start();
         }
 
         function render() {
@@ -64,7 +80,9 @@ const { projectId, secretHash } = auth;
 
                     // 全票一致以外はすべてコンフリクト（管理者判断が必要）
                     if (corrects !== requiredScorers && wrongs !== requiredScorers) {
-                        const finalResult = scoresData[`__final__q${q}`]?.[entryNum];
+                        // adminHash側の確定結果を優先、なければ自動確定を参照
+                        const finalResult = adminFinals[`q${q}`]?.[entryNum]
+                            || scorerScores[`__auto_final__q${q}`]?.[entryNum];
                         conflicts.push({ q, entryNum, qScores, finalResult });
                     }
                 });
@@ -170,7 +188,8 @@ const { projectId, secretHash } = auth;
         }
 
         async function setFinal(q, entryNum, result) {
-            await dbSet(`projects/${projectId}/protected/${secretHash}/scores/__final__q${q}/${entryNum}`, result);
+            // adminHash配下に書き込み（採点者からは書き換え不可能）
+            await dbSet(`projects/${projectId}/protected/${adminHash}/finalResults/q${q}/${entryNum}`, result);
         }
 
         function selectConflictCard(idx) {
