@@ -111,12 +111,8 @@
             const name = masterData[num]?.name || `No.${padNum(num)}`;
             overlay.innerHTML = `<div class="preview-overlay-header"><h2 class="preview-overlay-title"><i class="fa-solid fa-file-image"></i> ${escapeHtml(name)} の解答用紙</h2><button class="btn secondary" onclick="document.getElementById('admin-preview-overlay').style.display='none'">✕ 閉じる</button></div><div id="admin-preview-content" class="preview-overlay-content"><div class="text-muted-loader"><i class="fa-solid fa-spinner fa-spin"></i> 読み込み中...</div></div>`;
             overlay.style.display = 'block';
-            const ansData = await dbGet(`projects/${projectId}/protected/${secretHash}/answers/${num}`);
             const pc = document.getElementById('admin-preview-content');
-            let imageUrl = ansData?.pageImage;
-            if (!imageUrl) {
-                imageUrl = await dbGet(`projects/${projectId}/protected/${secretHash}/answerImages/${num}`);
-            }
+            const imageUrl = await dbGet(`projects/${projectId}/protected/${secretHash}/answerImages/${num}`);
             if (imageUrl) {
                 pc.innerHTML = `<img src="${imageUrl}" alt="${name}" class="preview-image">`;
             } else {
