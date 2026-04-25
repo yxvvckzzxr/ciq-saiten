@@ -34,14 +34,11 @@ const SERVER_TIMESTAMP = firebase.database.ServerValue.TIMESTAMP;
  * 各ページの初期化時に最初に呼ぶ。
  */
 function waitForAuth() {
-    return new Promise(resolve => {
-        if (firebase.auth().currentUser) return resolve(firebase.auth().currentUser);
-        const unsub = firebase.auth().onAuthStateChanged(user => {
-            if (user) { unsub(); resolve(user); }
-        });
-        // タイムアウト: 5秒以内に認証完了しなければ続行（ローカル環境対策）
-        setTimeout(() => resolve(null), 5000);
-    });
+    if (firebase.auth().currentUser) return Promise.resolve(firebase.auth().currentUser);
+    return Promise.race([
+        _authReadyPromise.then(() => firebase.auth().currentUser),
+        new Promise(r => setTimeout(() => r(null), 2000))
+    ]);
 }
 
 // ============================================

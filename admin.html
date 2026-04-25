@@ -9,20 +9,23 @@
     <meta property="og:title" content="CIQ - 解答採点プラットフォーム">
     <meta property="og:description" content="クイズ大会の解答採点を支援するウェブプラットフォーム">
     <meta property="og:type" content="website">
-    <meta property="og:image" content="favicon.png">
+    <meta property="og:image" content="og-image.png">
     <title>CIQ - 管理画面</title>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script defer src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 
-    <script src="js/config.js"></script>
-    <script src="js/crypto.js"></script>
-    <script src="js/shared.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
-    <script src="js/cv.js"></script>
-    <script src="js/aruco.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script defer src="js/config.js"></script>
+    <script defer src="js/crypto.js"></script>
+    <script defer src="js/shared.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script defer src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+    <script defer src="js/cv.js"></script>
+    <script defer src="js/aruco.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Noto+Sans+JP:wght@400;500;600;800&display=swap">
     <link rel="stylesheet" href="css/design_system.css">
     <link rel="stylesheet" href="css/pages.css">
 </head>
@@ -424,11 +427,11 @@
     <canvas id="work-canvas" class="hidden-canvas"></canvas>
     <canvas id="transform-canvas" class="hidden-canvas"></canvas>
 
-    <script src="js/admin.js?v=7"></script>
-    <script src="js/admin_prep.js?v=7"></script>
-    <script src="js/admin_scan.js?v=7"></script>
-    <script src="js/admin_stats.js?v=7"></script>
-    <script src="js/admin_graded_pdf.js?v=1"></script>
-    <script src="js/admin_settings.js?v=7"></script>
+    <script defer src="js/admin.js?v=7"></script>
+    <script defer src="js/admin_prep.js?v=7"></script>
+    <script defer src="js/admin_scan.js?v=7"></script>
+    <script defer src="js/admin_stats.js?v=7"></script>
+    <script defer src="js/admin_graded_pdf.js?v=1"></script>
+    <script defer src="js/admin_settings.js?v=7"></script>
 </body>
 </html>

@@ -11,10 +11,14 @@ const firebaseConfig = {
 };
 
 // Firebase SDK初期化
+let _authReadyPromise = Promise.resolve(null);
 if (typeof firebase !== 'undefined') {
   firebase.initializeApp(firebaseConfig);
   // Anonymous Auth: ユーザーには見えないが、セキュリティルールで auth != null を満たす
-  firebase.auth().signInAnonymously().catch(e => console.warn('Anonymous auth failed:', e));
+  _authReadyPromise = firebase.auth().signInAnonymously().catch(e => {
+    console.warn('Anonymous auth failed:', e);
+    return null;
+  });
 }
 
 

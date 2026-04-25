@@ -1,5 +1,5 @@
 /* CIQ Global Design System — Liquid Glass v2 */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800&family=Noto+Sans+JP:wght@400;500;600;800&display=swap');
+/* Google Fonts は各HTMLの<link>で読み込み済み */
 
 /* モバイルダブルタップズーム防止 */
 *, *::before, *::after { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
