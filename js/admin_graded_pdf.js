@@ -43,7 +43,7 @@
                 const total = sortedEntries.length;
                 for (let idx = 0; idx < total; idx++) {
                     const en = sortedEntries[idx];
-                    overlayText.textContent = `${idx + 1} / ${total} 人処理中 (No.${String(en).padStart(3, '0')})`;
+                    overlayText.textContent = `${idx + 1} / ${total} 人処理中`;
                     overlayBar.style.width = `${((idx + 1) / total) * 100}%`;
 
                     // ページ画像取得

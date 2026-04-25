@@ -214,9 +214,14 @@
                 qStats.push({ q, correctCount: cc, rate, type, names, isRare: cc <= threshold && cc > 0 });
             } return qStats;
         }
+        let _lastAnalyticsHash = '';
         async function renderAnalytics() {
-            const tbody = document.getElementById('analytics-tbody'); if (!entryNumbers.length) { tbody.innerHTML = '<tr><td colspan="5" class="td-loading">データがありません</td></tr>'; return; }
+            const tbody = document.getElementById('analytics-tbody');
+            if (!entryNumbers.length) { tbody.innerHTML = '<tr><td colspan="5" class="td-loading">データがありません</td></tr>'; _lastAnalyticsHash = ''; return; }
             const qs = await getAnalyticsData();
+            const hash = qs.map(s => `${s.q}:${s.correctCount}`).join(',');
+            if (hash === _lastAnalyticsHash) return;
+            _lastAnalyticsHash = hash;
             tbody.innerHTML = qs.map(s => `<tr class="${s.isRare ? 'row-rare' : ''}"><td >${s.q}</td><td >${s.correctCount}人</td><td >${s.rate}%</td><td >${escapeHtml(s.type)}</td><td >${escapeHtml(s.names)}</td></tr>`).join('');
         }
         async function exportAnalyticsCSV() {
