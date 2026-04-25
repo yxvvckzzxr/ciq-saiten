@@ -144,7 +144,6 @@
                 const score = answers.reduce((a, b) => a + b, 0);
                 const streaks = []; let cur = 0;
                 answers.forEach(a => { if (a === 1) { cur++; } else { streaks.push(cur); cur = 0; } });
-                streaks.push(cur); // 最後の区間
                 const m = masterData[en] || {};
                 const name = formatCsvName(m.familyName || '', m.firstName || '', m.entryName || '', m.useEntryName, sepType, fixedLen);
                 return { entryNumber: en, name, affiliation: m.affiliation || '', grade: m.grade || '', score, answers, streaks };

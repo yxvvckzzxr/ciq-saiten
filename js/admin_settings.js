@@ -369,7 +369,6 @@
                     // 連答: 前から順に区切る（0連答も記録）
                     const streaks = []; let cur = 0;
                     answers.forEach(a => { if (a === 1) { cur++; } else { streaks.push(cur); cur = 0; } });
-                    streaks.push(cur);
                     return { en, score, streaks };
                 });
 
