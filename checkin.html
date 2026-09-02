@@ -12,13 +12,13 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.min.js" integrity="sha384-fx4y4cDx8NYfissnVzdGJY3yVXWY3rn5ab5HTUjpvgT35oDiyAbjjqnLhnRmESNE" crossorigin="anonymous"></script>
     <script defer src="js/supabase_config.js?v=2"></script>
     <script defer src="js/supabase_client.js"></script>
-    <script defer src="js/supabase_api.js?v=35"></script>
+    <script defer src="js/supabase_api.js?v=36"></script>
     <script defer src="js/crypto.js"></script>
     <script defer src="js/icons.js?v=8"></script>
     <script defer src="js/ui.js?v=22"></script>
     <script defer src="js/shared.js?v=2"></script>
     <link rel="stylesheet" href="css/design_system.css?v=77">
-    <link rel="stylesheet" href="css/pages.css?v=120">
+    <link rel="stylesheet" href="css/pages.css?v=121">
 </head>
 <body class="page-checkin">
     <!-- 集中モードシェル: 戻る + 現在位置 + 受付状況(控えめ) -->
@@ -52,14 +52,11 @@
                 </div>
             </div>
             <p id="scanning-text" role="status" aria-live="polite">QRコードを枠の中にかざしてください</p>
-            <form class="checkin-manual" id="manual-form">
-                <label class="checkin-manual-label" for="manual-number">QRが読めないときは受付番号で受付</label>
-                <div class="checkin-manual-row">
-                    <input type="number" id="manual-number" name="entry-number" inputmode="numeric" min="1" step="1"
-                           placeholder="受付番号" autocomplete="off">
-                    <button type="submit" class="btn secondary" id="manual-btn">受付する</button>
-                </div>
-            </form>
+            <!-- 受付番号での手入力受付はこの画面には置かない。
+                 この画面は参加者がQRをかざすために覗き込む前提で、受付番号は公開情報のため、
+                 番号だけで受付状態を書き換えられる操作を参加者の目の前に残さない。
+                 手入力は運営専用ページ(admin.html)に置いている。 -->
+            <p class="checkin-manual-note">QRが読めないときは運営にお申し出ください</p>
         </div>
 
         <div class="right-col">
@@ -73,6 +70,6 @@
         </div>
     </div>
 
-    <script defer src="js/checkin.js?v=12"></script>
+    <script defer src="js/checkin.js?v=13"></script>
 </body>
 </html>

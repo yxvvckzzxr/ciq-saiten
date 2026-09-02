@@ -14,7 +14,9 @@ describe('removed members are rejected consistently (V11)', () => {
     // 否定形(status <> 'removed')ではなく、active を明示する
     expect(src).toMatch(/member\.status !== 'active'/);
     expect(src).not.toMatch(/member\.status === 'removed'/);
-    expect(src).toMatch(/member\.role !== 'owner' && member\.role !== 'admin' && member\.role !== 'scorer'/);
+    // ロール判定は allowlist(呼び出し側が許可ロールを渡す)。想定外ロールが素通りしないこと。
+    expect(src).toMatch(/if \(!allowedRoles\.includes\(member\.role as Role\)\) throw new Error\('Forbidden'\)/);
+    expect(src).toMatch(/const DESK_ROLES: Role\[\] = \['owner', 'admin', 'scorer'\]/);
   });
 
   it('staff-facing functions all gate on an explicit active status', () => {
