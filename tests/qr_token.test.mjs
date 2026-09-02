@@ -106,14 +106,29 @@ describe('QR generation paths embed the signed token, never the raw UUID (V7)', 
   it('check-in verifies the token and refuses a bare UUID', () => {
     const src = read('supabase/functions/check-in/index.ts');
     expect(src).toMatch(/const verifiedId = await verifyQrToken\(scanned\)/);
-    expect(src).toMatch(/query = query\.eq\('id', verifiedId\)/);
+    expect(src).toMatch(/findEntry\(supabase, req, projectId, \{ id: verifiedId \}\)/);
     // 未検証の値で直接引かない
     expect(src).not.toMatch(/\.eq\('id', entryId\)/);
   });
 
-  it('check-in offers a receipt-number fallback for unreadable QRs', () => {
+  // 受付番号フォールバックは残すが、参加者に向いた受付画面(checkin.html)からは外し、
+  // 運営専用ページ + owner/admin 限定 + 照会を挟む2段階に移した。
+  // entry_number は public_entry_list で anon に公開されており、認証材料にならないため。
+  it('check-in keeps a receipt-number fallback, but only on the staff-only path', () => {
     const src = read('supabase/functions/check-in/index.ts');
-    expect(src).toMatch(/query\.eq\('entry_number', Number\(entryNumber\)\)/);
+    expect(src).toMatch(/entryNumber: number/);
+    expect(src).toMatch(/query\.eq\('entry_number', by\.entryNumber\)/);
+
+    // QR 経路(check)では番号を一切見ない
+    const checkBranch = src.slice(
+      src.indexOf("if (action === 'check')"),
+      src.indexOf("if (action === 'lookup')"),
+    );
+    expect(checkBranch).not.toMatch(/entryNumber/);
+
+    // 番号起点の経路は運営限定で、照会で得た id との一致を要求する
+    expect(src).toMatch(/const STAFF_ONLY_ROLES: Role\[\] = \['owner', 'admin'\]/);
+    expect(src).toMatch(/String\(entry\.id\) !== String\(confirmedEntryId\)/);
   });
 });
 

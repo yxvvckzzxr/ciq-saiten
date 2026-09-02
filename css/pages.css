@@ -4359,18 +4359,25 @@ body.page-admin .saved-answers-section #entry-list .entry-num-badge {
 }
 .turnstile-box iframe { max-width: 100%; }
 
-/* 当日受付: QRが読めないときの受付番号フォールバック(V7) */
-.checkin-manual {
+/* 当日受付: QRが読めないときの案内。受付操作そのものは運営専用ページに置く */
+.checkin-manual-note {
     margin-top: 12px;
-    width: 100%;
-    max-width: 420px;
-}
-.checkin-manual-label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
+    font-size: var(--fs-13);
     color: var(--ink-2);
-    margin-bottom: 6px;
+    text-align: center;
+}
+
+.checkin-panel-note {
+    font-size: var(--fs-13);
+    color: var(--ink-2);
+    margin-bottom: 12px;
+}
+
+/* 運営側の手入力受付(照会 -> 確認 -> 確定 の2段階) */
+.checkin-manual-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 }
 .checkin-manual-row {
     display: flex;
@@ -4385,9 +4392,37 @@ body.page-admin .saved-answers-section #entry-list .entry-num-badge {
     flex: 0 0 auto;
     white-space: nowrap;
 }
+.checkin-confirm {
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 12px 14px;
+    background: var(--surface-2);
+}
+.checkin-confirm-name {
+    font-size: var(--fs-17);
+    font-weight: 700;
+    color: var(--ink);
+}
+.checkin-confirm-sub {
+    font-size: var(--fs-13);
+    color: var(--ink-2);
+    margin-top: 2px;
+}
+.checkin-confirm-state {
+    font-size: var(--fs-13);
+    font-weight: 600;
+    margin-top: 6px;
+}
+.checkin-confirm-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+}
 @media (max-width: 640px) {
     .checkin-manual-row { flex-direction: column; align-items: stretch; }
     .checkin-manual-row .btn { width: 100%; }
+    .checkin-confirm-actions .btn { flex: 1 1 auto; }
 }
 
 /* 採点者招待リンク(AB-1) */

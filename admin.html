@@ -11,13 +11,13 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.min.js" integrity="sha384-fx4y4cDx8NYfissnVzdGJY3yVXWY3rn5ab5HTUjpvgT35oDiyAbjjqnLhnRmESNE" crossorigin="anonymous"></script>
     <script defer src="js/supabase_config.js?v=2"></script>
     <script defer src="js/supabase_client.js"></script>
-    <script defer src="js/supabase_api.js?v=35"></script>
+    <script defer src="js/supabase_api.js?v=36"></script>
     <script defer src="js/crypto.js"></script>
     <script defer src="js/icons.js?v=8"></script>
     <script defer src="js/ui.js?v=22"></script>
     <script defer src="js/shared.js?v=2"></script>
     <link rel="stylesheet" href="css/design_system.css?v=77">
-    <link rel="stylesheet" href="css/pages.css?v=120">
+    <link rel="stylesheet" href="css/pages.css?v=121">
 </head>
 
 <body class="page-admin">
@@ -87,7 +87,7 @@
         <nav class="phase-quick-nav" aria-label="運営フェーズショートカット">
             <button type="button" class="phase-quick-btn" data-tab-target="tab-prep"><span>1</span><b>準備</b></button>
             <button type="button" class="phase-quick-btn active" data-tab-target="tab-entries"><span>2</span><b>公開</b></button>
-            <button type="button" class="phase-quick-btn" data-nav-target="checkin.html"><span>3</span><b>当日</b></button>
+            <button type="button" class="phase-quick-btn" data-tab-target="tab-checkin"><span>3</span><b>当日</b></button>
             <button type="button" class="phase-quick-btn" data-tab-target="tab-scan"><span>4</span><b>採点</b></button>
             <button type="button" class="phase-quick-btn" data-tab-target="tab-stats"><span>5</span><b>結果</b></button>
             <button type="button" class="phase-quick-btn" data-tab-target="tab-settings"><span data-icon="gear" aria-hidden="true"></span><b>設定</b></button>
@@ -246,15 +246,49 @@
             </li>
 
             <!-- ③ 当日 -->
-            <li class="phase phase-jump">
-                <button type="button" class="phase-goto" data-nav-target="checkin.html">
+            <li class="phase">
+                <button type="button" class="tab-btn" id="tab-checkin-tab" data-tab-target="tab-checkin" aria-selected="false" aria-controls="tab-checkin" role="tab" tabindex="-1">
                     <span class="phase-num" aria-hidden="true">3</span>
                     <span class="phase-label">
                         <span class="phase-title">当日</span>
                         <span class="phase-desc">QRコードで当日受付を行う</span>
                     </span>
-                    <span class="phase-goto-arrow" aria-hidden="true"><span data-icon="arrow-right" aria-hidden="true"></span></span>
                 </button>
+                <div class="tab-content" id="tab-checkin" role="tabpanel" aria-labelledby="tab-checkin-tab" hidden>
+                    <div class="phase-block">
+                        <h2>受付画面</h2>
+                        <p class="checkin-panel-note">参加者にQRコードをかざしてもらう画面です。受付卓の端末で開いてください。</p>
+                        <div class="phase-actions">
+                            <button class="btn" data-nav-target="checkin.html"><span data-icon="qrcode" aria-hidden="true"></span> 受付画面を開く</button>
+                        </div>
+                    </div>
+
+                    <!-- QRが読めないときの手入力受付。参加者に向いた checkin.html ではなく運営専用のこの画面に置く。
+                         受付番号は公開情報(エントリーリスト)なので、番号だけで受付状態を書き換えられる操作を
+                         参加者の目の前にある受付卓の画面に残さないため。サーバ側も owner/admin 限定。 -->
+                    <div class="phase-block">
+                        <h2>受付番号で手動受付</h2>
+                        <p class="checkin-panel-note">QRが読めない参加者は、受付番号で照会して本人を確認してから受付します。</p>
+                        <div class="checkin-manual-panel">
+                            <form class="checkin-manual-row" id="manual-checkin-form">
+                                <input type="number" id="manual-checkin-number" inputmode="numeric" min="1" step="1"
+                                       placeholder="受付番号" autocomplete="off" aria-label="受付番号">
+                                <button type="submit" class="btn secondary" id="manual-checkin-lookup"><span data-icon="hashtag" aria-hidden="true"></span> 照会する</button>
+                            </form>
+                            <div class="checkin-confirm u-hidden" id="manual-checkin-confirm">
+                                <div class="checkin-confirm-name" id="manual-checkin-name"></div>
+                                <div class="checkin-confirm-sub" id="manual-checkin-sub"></div>
+                                <div class="checkin-confirm-state" id="manual-checkin-state"></div>
+                                <div class="checkin-confirm-actions">
+                                    <button type="button" class="btn" id="manual-checkin-commit"><span data-icon="user-check" aria-hidden="true"></span> 受付する</button>
+                                    <button type="button" class="btn secondary" id="manual-checkin-undo"><span data-icon="rotate-left" aria-hidden="true"></span> 受付を取り消す</button>
+                                    <button type="button" class="btn ghost" id="manual-checkin-cancel">やめる</button>
+                                </div>
+                            </div>
+                            <div class="page-msg" id="manual-checkin-status" aria-live="polite"></div>
+                        </div>
+                    </div>
+                </div>
             </li>
 
             <!-- ④ 採点 -->
@@ -708,7 +742,7 @@
         </div>
     </div>
 
-    <script defer src="js/admin.js?v=37"></script>
+    <script defer src="js/admin.js?v=38"></script>
     <script defer src="js/upload_validation.js?v=3"></script>
     <script defer src="js/admin_scan.js?v=16"></script>
     <script defer src="js/admin_stats.js?v=11"></script>

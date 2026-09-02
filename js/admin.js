@@ -478,7 +478,7 @@
         };
 
         // タブ切り替え（遅延ロード対応）
-        const tabLoaded = { 'tab-entries': false, 'tab-prep': false, 'tab-scan': false, 'tab-stats': false, 'tab-settings': false };
+        const tabLoaded = { 'tab-entries': false, 'tab-prep': false, 'tab-checkin': false, 'tab-scan': false, 'tab-stats': false, 'tab-settings': false };
 
         function switchTab(tabId) {
             document.querySelectorAll('.tab-content').forEach(t => {
@@ -541,8 +541,127 @@
             });
         }
 
+        // ============================
+        // 受付番号での手動受付(運営専用)
+        // ============================
+        // checkin.html は参加者がQRをかざす前提の画面なので、番号だけで受付状態を書き換える操作は
+        // そちらに置かず運営専用のこの画面に置く。サーバ側も owner/admin 限定にしてある。
+        // 照会 -> 氏名・所属を目視確認 -> 確定 の2段階にして、打ち間違いで別人を受付済みにする事故も防ぐ。
+        const MANUAL_CHECKIN_STATUS_LABEL = {
+            registered: '登録済み',
+            late: '遅刻連絡あり',
+            waitlist: 'キャンセル待ち',
+            canceled: 'キャンセル済み',
+        };
+
+        function setupManualCheckIn() {
+            const form = document.getElementById('manual-checkin-form');
+            const input = document.getElementById('manual-checkin-number');
+            const lookupBtn = document.getElementById('manual-checkin-lookup');
+            const confirmBox = document.getElementById('manual-checkin-confirm');
+            const nameEl = document.getElementById('manual-checkin-name');
+            const subEl = document.getElementById('manual-checkin-sub');
+            const stateEl = document.getElementById('manual-checkin-state');
+            const commitBtn = document.getElementById('manual-checkin-commit');
+            const undoBtn = document.getElementById('manual-checkin-undo');
+            const cancelBtn = document.getElementById('manual-checkin-cancel');
+            const statusEl = document.getElementById('manual-checkin-status');
+            if (!form || !input || !confirmBox) return;
+
+            // 照会結果。確定・取り消しはこの id をサーバへ送り返し、照会を経ない実行を防ぐ。
+            let pending = null;
+
+            function resetPanel() {
+                pending = null;
+                confirmBox.classList.add('u-hidden');
+                input.value = '';
+                input.focus();
+            }
+
+            function showPending(entry) {
+                pending = entry;
+                nameEl.textContent = entry.entryName || `No.${padNum(entry.entryNumber)}`;
+                subEl.textContent = [`受付番号 ${padNum(entry.entryNumber)}`, entrySubText(entry)].filter(Boolean).join(' · ');
+
+                const statusLabel = MANUAL_CHECKIN_STATUS_LABEL[entry.status] || entry.status || '';
+                const checkable = entry.status === 'registered' || entry.status === 'late';
+                stateEl.textContent = entry.checkedIn ? `受付済み（${statusLabel}）` : `未受付（${statusLabel}）`;
+
+                commitBtn.classList.toggle('u-hidden', Boolean(entry.checkedIn) || !checkable);
+                undoBtn.classList.toggle('u-hidden', !entry.checkedIn);
+                if (!checkable && !entry.checkedIn) {
+                    setPageMessage(statusEl, 'この参加者は受付対象外です。状態を確認してください。', 'warning');
+                }
+                confirmBox.classList.remove('u-hidden');
+            }
+
+            function entrySubText(entry) {
+                return [entry?.affiliation, entry?.grade].filter(Boolean).join(' / ');
+            }
+
+            async function withBusy(button, run) {
+                const targets = [lookupBtn, commitBtn, undoBtn, cancelBtn, input].filter(Boolean);
+                targets.forEach(el => { el.disabled = true; });
+                try {
+                    await run();
+                } catch (e) {
+                    setPageMessage(statusEl, e.message || '操作に失敗しました。', 'error');
+                } finally {
+                    targets.forEach(el => { el.disabled = false; });
+                }
+            }
+
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                const value = Number(input.value);
+                if (!Number.isFinite(value) || value <= 0) {
+                    setPageMessage(statusEl, '受付番号を入力してください。', 'error');
+                    return;
+                }
+                clearPageMessage(statusEl);
+                withBusy(lookupBtn, async () => {
+                    const entry = await CIQSupabaseAPI.lookupEntryByNumber(projectId, value);
+                    showPending(entry);
+                });
+            });
+
+            commitBtn?.addEventListener('click', () => {
+                if (!pending) return;
+                clearPageMessage(statusEl);
+                withBusy(commitBtn, async () => {
+                    const result = await CIQSupabaseAPI.checkInEntryManually(projectId, pending.entryNumber, pending.id);
+                    const name = result.entry?.entryName || `No.${padNum(pending.entryNumber)}`;
+                    if (result.result === 'already') {
+                        setPageMessage(statusEl, `${name} はすでに受付済みです。`, 'warning');
+                    } else {
+                        setPageMessage(statusEl, `${name} を受付しました。`, 'success');
+                    }
+                    resetPanel();
+                });
+            });
+
+            undoBtn?.addEventListener('click', async () => {
+                if (!pending) return;
+                const name = pending.entryName || `No.${padNum(pending.entryNumber)}`;
+                const ok = await showConfirm(`${name} の受付を取り消します。よろしいですか?`, '取り消す');
+                if (!ok) return;
+                clearPageMessage(statusEl);
+                withBusy(undoBtn, async () => {
+                    await CIQSupabaseAPI.undoCheckIn(projectId, pending.entryNumber, pending.id);
+                    setPageMessage(statusEl, `${name} の受付を取り消しました。`, 'success');
+                    resetPanel();
+                });
+            });
+
+            cancelBtn?.addEventListener('click', () => {
+                clearPageMessage(statusEl);
+                resetPanel();
+            });
+        }
+
         async function init() {
             setupAdminEventHandlers();
+            setupManualCheckIn();
             setupPublicLinks();
             registerAdminShortcuts();
             if (typeof bindEmailSettingsAutosave === 'function') bindEmailSettingsAutosave();

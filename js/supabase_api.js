@@ -449,14 +449,39 @@ const CIQSupabaseAPI = {
         return data;
     },
 
-    // 受付番号で受付する(QRが読めない場合の運用フォールバック。運営が本人の番号を目視照合して入力)。
-    async checkInEntryByNumber(projectId, entryNumber) {
+    // 受付番号で照会する(状態は変えない)。QRが読めないときの運用フォールバックの第一段階で、
+    // 運営が氏名・所属を目視確認するために使う。運営専用ページからのみ呼ぶ(サーバ側も owner/admin 限定)。
+    async lookupEntryByNumber(projectId, entryNumber) {
         const data = await this.invokeAuthedFunction('check-in', {
-            action: 'check',
+            action: 'lookup',
             projectId,
             entryNumber,
         });
+        if (!data?.ok) throw new Error(data?.error || 'Lookup failed');
+        return data.entry;
+    },
+
+    // 手入力での受付確定。lookupEntryByNumber で得た id を必ず添える(照会を経ない確定を防ぐ)。
+    async checkInEntryManually(projectId, entryNumber, confirmedEntryId) {
+        const data = await this.invokeAuthedFunction('check-in', {
+            action: 'check_manual',
+            projectId,
+            entryNumber,
+            confirmedEntryId,
+        });
         if (!data?.ok) throw new Error(data?.error || 'Check-in failed');
+        return data;
+    },
+
+    // 受付の取り消し。誤受付を当日中に戻すための運営操作で、サーバ側で監査ログに残る。
+    async undoCheckIn(projectId, entryNumber, confirmedEntryId) {
+        const data = await this.invokeAuthedFunction('check-in', {
+            action: 'undo',
+            projectId,
+            entryNumber,
+            confirmedEntryId,
+        });
+        if (!data?.ok) throw new Error(data?.error || 'Undo failed');
         return data;
     },
 
