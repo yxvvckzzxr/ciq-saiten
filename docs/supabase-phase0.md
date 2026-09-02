@@ -11,6 +11,63 @@
 
 ---
 
+## 0. 移行の理由
+
+> この節は移行当時に書かれたものではなく、**2026-09 に当時のコードと記憶から再構成**した。
+> 「なぜ Firebase をやめたのか」が本書のどこにも無く、§1 の脅威モデル表を読んだ人が
+> 「セキュリティ上 Firebase では不可能だった」と誤読するため、根拠つきで補った。
+
+### 主因 — RTDB の同時接続数
+
+Firebase RTDB の Web SDK は一発読み（`dbGet`）でも WebSocket を張り続けるため、
+**DB を触るページを開いている人数がそのまま同時接続数になる**。当時は参加者ページも
+SDK を読み込んでいた（`entry_list.html` の CSP に `connect-src wss://*.firebasedatabase.app`）。
+
+| 誰が | 接続 |
+|------|------|
+| 参加者（entry / entry_list を開いている間） | 各 1 |
+| 運営（admin / prep / settings、タブの数だけ） | 各 1 |
+| 採点者（judge / question / conflict） | 各 1 |
+
+加えて `js/ui.js:94` → `js/db.js:158` の `watchProjectDeletion` が `publicSettings` に
+`on('value')` を張るので、運営・採点者側は明示的な購読も持っていた。
+無料枠の同時接続上限（Spark で 100 程度。**数値は要確認**）に対し、受付開始直後や大会当日は
+現実的に届く。超過すると新規接続が弾かれる＝一部の利用者だけ画面が出ない、という
+最悪の壊れ方をするため、これが移行を決めた主因。
+
+### 副因 — 答案画像を RTDB 本体に置いていた
+
+`js/admin_prep.js:220` が `toDataURL('image/webp', 0.25)` で dataURL 化し、
+`protected/{hash}/answerImages/{n}` と `answerCells/q{N}/{n}` に格納していた。
+RTDB は JSON DB なので、画像がストレージ課金ではなく **DB の容量枠と転送量枠を直撃**する
+（base64 で +33%）。さらに `js/question.js:28` は `answerCells/q{N}` を丸ごと読むため、
+1 問開くたびに全エントリー分の切り出し画像が落ちてくる。
+§4-3 の「base64 を RTDB に載せない」はこの解消が目的。
+
+ただしこれは Firebase の限界ではない。Cloud Storage に逃がせば Firebase のままでも回避できた。
+
+### トレードオフとして払ったコスト — 画像表示の速度
+
+RTDB 方式は**速かった**。dataURL が既に開いている WebSocket に載って降ってくるので、
+画像取得に追加の HTTP も認証も CORS プリフライトも要らず、クライアントキャッシュにも乗る。
+Supabase Storage では **署名 URL を取ってから画像を fetch する二段構え**になり、ここは明確に退化した。
+`docs/roadmap.md` の "signed URL caching" と `docs/project-improvement-plan.md` の
+"Batched answer cell signed URL creation" は、**承知の上で払ったこの負債の返済**であって、
+単なる実装の不出来ではない。
+
+### 理由ではなかったもの
+
+| 説 | 判定 |
+|----|------|
+| セキュリティ（§1 の T1〜T6） | ❌ 当時の実装の穴であり、Firebase でも Security Rules で塞げた |
+| 集計・CSV / PDF 出力 | ❌ Firebase 時代から `js/admin_stats.js` / `js/admin_graded_pdf.js` がクライアント側で生成していた |
+
+移行後の利得として実際に効いているのは、列単位の権限（`entries` の機密列、
+`project_invites.token_hash`）と、`pg_advisory_xact_lock` + `FOR UPDATE` による
+複数行のアトミック更新。どちらも RTDB では表現しにくい。
+
+---
+
 ## 1. 脅威モデル
 
 ### 絶対に防ぐこと
@@ -23,6 +80,12 @@
 | T4 | 他大会のデータへのアクセス | projectId さえ知れば可能 | RLS で `project_members` 必須 |
 | T5 | エントリー偽造・大量 spam | 直接 write 可能 | Edge Function + レート制限 |
 | T6 | メール API キー漏洩 | フロントに平文 | AWSキーは Edge Function Secrets のみ |
+
+> **注記（2026-09 追記）**: 「現状（Firebase）」列は**当時の実装の状態**であって、
+> Firebase というプラットフォームの限界ではない。T1 / T2 / T4 は Security Rules を
+> 書いていなかったこと、T6 は SES キーをフロントに置いていたことの帰結で、
+> いずれも Firebase 上でも塞げた。移行を決めた実際の理由は §0 を参照。
+
 
 ### 信頼境界
 
