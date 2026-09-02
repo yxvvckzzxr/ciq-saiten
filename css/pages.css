@@ -248,10 +248,12 @@ body.page-wrapper {
 }
 
 /* 大会名ヘッダー — 大会が主役、CIQ は黒衣。
-   中央寄せをやめ、本文と同じ左の基準線に揃えて読み出しを1本にする。 */
+   見出しと副題は中央揃え。左揃えだと見出しはカードの外枠に、本文はカードの内側
+   (padding のぶん内側)に来るため、基準線が2本に見えて揃って見えなかった。 */
 .page-logo {
   padding: 0;
   margin-bottom: var(--sp-2);
+  text-align: center;
 }
 
 .page-logo .logo-icon {
@@ -357,6 +359,9 @@ body.page-wrapper {
 
 .entry-steps {
   margin-bottom: var(--sp-1);
+  /* 見出しに揃えて中央。safe を付けないと、狭い画面で溢れたときに
+     先頭のステップが切れてスクロールでも戻せなくなる。 */
+  justify-content: safe center;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
   scrollbar-width: none;
