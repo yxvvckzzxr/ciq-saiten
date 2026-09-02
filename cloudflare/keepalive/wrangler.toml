@@ -1,0 +1,15 @@
+name = "ciq-supabase-keepalive"
+main = "src/index.js"
+compatibility_date = "2026-09-02"
+
+# cron は UTC。1 日 2 回 = 12:00 JST / 00:00 JST。
+# 7 日の停止猶予に対して 14 回投げるので、数回失敗しても止まらない。
+[triggers]
+crons = ["0 3,15 * * *"]
+
+# ここに置く 2 値は js/supabase_config.js でクライアントに配信済みの公開値。
+# 秘密ではないので Secret ではなく vars でよい（service_role キーは絶対に置かない）。
+[vars]
+SUPABASE_URL = "https://pyzdlkwumhreepgkrcyb.supabase.co"
+SUPABASE_PUBLISHABLE_KEY = "sb_publishable_wiuKyYbhmIS8SPkcqxccsw_GdFbv72b"
+KEEPALIVE_PATH = "/rest/v1/public_project_settings?select=project_id&limit=1"

@@ -19,3 +19,11 @@ Email delivery depends on Supabase Edge Functions and SES configuration. Browser
 ## Security Testing
 
 The repository has focused unit tests, but full RLS and Edge Function regression coverage is not complete yet. Security-sensitive changes require manual review of migrations, grants, policies, and client access paths.
+
+## Free Plan Project Pausing
+
+The Supabase Free plan pauses a project after 7 days with no requests, and restoring it is a manual
+dashboard action that takes minutes. Entry and event periods generate enough traffic on their own, so
+the risk is the off-season: the project pauses unnoticed and is still down on event day. A Cloudflare
+Workers cron in `cloudflare/keepalive/` pings a public view twice a day to prevent this. Verify it
+returns 200 before an event rather than trusting it silently.
