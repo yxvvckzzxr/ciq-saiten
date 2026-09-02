@@ -247,6 +247,14 @@ body.page-wrapper {
   width: min(var(--container-wide), calc(100vw - var(--wide-gutter)));
 }
 
+/* 中部枠の説明。チェックの意味(順位に効く)をその場で読ませる */
+.chubu-priority-note {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-13);
+  color: var(--ink-2);
+  line-height: var(--lh-body);
+}
+
 /* 大会名ヘッダー — 大会が主役、CIQ は黒衣。
    見出しと副題は中央揃え。左揃えだと見出しはカードの外枠に、本文はカードの内側
    (padding のぶん内側)に来るため、基準線が2本に見えて揃って見えなかった。 */

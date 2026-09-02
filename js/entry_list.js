@@ -20,7 +20,9 @@ const params = new URLSearchParams(location.search);
 
     let maxEntries = 0;
     let entryOpenTime = 0;
-    const GRACE_PERIOD_MS = 30 * 60 * 1000; // 30分
+    // 中部枠: エントリー開始から24時間は中部地方を優先する。
+    // サーバ側の recompute_entry_statuses(202609030001)と同じ値・同じ規則を保つこと。
+    const CHUBU_PRIORITY_WINDOW_MS = 24 * 60 * 60 * 1000; // 24時間
     let publicEntrySubscription = null;
 
     async function loadPublicSettings() {
@@ -69,45 +71,53 @@ const params = new URLSearchParams(location.search);
     }
 
     /**
-     * 優先順位を計算する
-     * - canceledは除外
-     * - 30分以内: 完全先着順
-     * - 30分以降: 中部優先 → その他 (各内部で先着順)
+     * 優先順位を計算する。サーバ側 recompute_entry_statuses と同じ規則。
+     * - canceled は除外
+     * - 1) 開始24時間以内 かつ 中部 (エントリー順)
+     * - 2) 開始24時間以内 かつ 中部以外 (エントリー順)
+     * - 3) 24時間経過後 (中部かどうかを問わずエントリー順)
+     * エントリー開始時刻が未設定の大会は優先枠を適用せず全員先着順。
+     *
+     * 表示ロジックから切り離してテストできるよう、状態は引数で受け取る。
      */
-    function calcPriority(entries) {
+    function calcPriority(entries, opts) {
+        const openTime = opts?.entryOpenTime || 0;
+        const capacity = opts?.maxEntries || 0;
+        const windowMs = opts?.windowMs || 0;
+
         const active = entries.filter(e => e.status !== 'canceled');
-        // timestamp順にソート
-        active.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+        // エントリー順(同時刻は受付番号順)に揃えてから区分に振り分ける
+        active.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0)
+            || (a.entryNumber || 0) - (b.entryNumber || 0));
 
-        const cutoff = entryOpenTime > 0 ? entryOpenTime + GRACE_PERIOD_MS : 0;
+        const cutoff = openTime > 0 ? openTime + windowMs : 0;
 
-        let early, lateChubu, lateOther;
+        let earlyChubu, earlyOther, late;
         if (cutoff > 0) {
-            early = active.filter(e => (e.timestamp || 0) <= cutoff);
-            const late = active.filter(e => (e.timestamp || 0) > cutoff);
-            lateChubu = late.filter(e => e.isChubu === true);
-            lateOther = late.filter(e => e.isChubu !== true);
+            const early = active.filter(e => (e.timestamp || 0) <= cutoff);
+            earlyChubu = early.filter(e => e.isChubu === true);
+            earlyOther = early.filter(e => e.isChubu !== true);
+            late = active.filter(e => (e.timestamp || 0) > cutoff);
         } else {
             // エントリー開始時刻未設定 → 全員先着順
-            early = active;
-            lateChubu = [];
-            lateOther = [];
+            earlyChubu = [];
+            earlyOther = [];
+            late = active;
         }
 
-        const earlyCount = early.length;
-        const lateChubuCount = lateChubu.length;
-        const ordered = [...early, ...lateChubu, ...lateOther];
+        const earlyChubuCount = earlyChubu.length;
+        const earlyOtherCount = earlyOther.length;
+        const ordered = [...earlyChubu, ...earlyOther, ...late];
         ordered.forEach((e, i) => {
             e._priority = i + 1;
-            e._isWaitlist = maxEntries > 0 && e._priority > maxEntries;
-            e._isAfterGrace = i >= earlyCount && cutoff > 0;
+            e._isWaitlist = capacity > 0 && e._priority > capacity;
         });
         return {
             ordered,
-            earlyCount,
-            lateChubuCount,
-            lateOtherCount: lateOther.length,
-            hasGraceSplit: cutoff > 0 && earlyCount < ordered.length,
+            earlyChubuCount,
+            earlyOtherCount,
+            lateCount: late.length,
+            hasPriorityWindow: cutoff > 0 && earlyChubuCount + earlyOtherCount > 0,
         };
     }
 
@@ -128,7 +138,11 @@ const params = new URLSearchParams(location.search);
             return;
         }
 
-        const { ordered, earlyCount, lateChubuCount, lateOtherCount, hasGraceSplit } = calcPriority(entries);
+        const { ordered, earlyChubuCount, earlyOtherCount, lateCount, hasPriorityWindow } = calcPriority(entries, {
+            entryOpenTime,
+            maxEntries,
+            windowMs: CHUBU_PRIORITY_WINDOW_MS,
+        });
         const waitlistCount = ordered.filter(e => e._isWaitlist).length;
 
         const renderRow = (e, isWaitlist) => {
@@ -182,11 +196,14 @@ const params = new URLSearchParams(location.search);
                 const capacityNote = maxEntries > 0 ? ` · 定員${maxEntries}名` : '';
                 appendDivider(body, 'clock', `ここまで出場圏内${capacityNote} — 以下キャンセル待ち（${waitlistCount}名）`, 'entry-list-divider-warning');
             }
-            if (hasGraceSplit && index === earlyCount && lateChubuCount > 0) {
-                appendDivider(body, 'map-pin', '以降 中部優先', 'entry-list-divider-rule');
+            if (hasPriorityWindow && index === 0 && earlyChubuCount > 0) {
+                appendDivider(body, 'map-pin', '中部地方（開始24時間以内）', 'entry-list-divider-rule');
             }
-            if (hasGraceSplit && index === earlyCount + lateChubuCount && lateOtherCount > 0) {
-                appendDivider(body, 'clock', '以降 先着', 'entry-list-divider-rule');
+            if (hasPriorityWindow && index === earlyChubuCount && earlyOtherCount > 0) {
+                appendDivider(body, 'map-pin', '以降 中部地方以外（開始24時間以内）', 'entry-list-divider-rule');
+            }
+            if (hasPriorityWindow && index === earlyChubuCount + earlyOtherCount && lateCount > 0) {
+                appendDivider(body, 'clock', '以降 開始24時間経過後（先着）', 'entry-list-divider-rule');
             }
             renderRow(entry, entry._isWaitlist);
         });
