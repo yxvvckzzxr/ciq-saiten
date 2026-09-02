@@ -3012,8 +3012,10 @@ body.page-conflict .action-bar {
 }
 
 /* 解決済みは下部に畳む(order) + 静かに */
+/* 確定済みは question.html の採点カードと同じく、その場で色だけ変える。
+   order で末尾へ送ると、DOM 上の並びと見た目の並びがずれてキーボード選択が
+   飛んだように見えるうえ、判定した瞬間にカードが動いて視線を持っていかれる。 */
 .conflict-card.resolved {
-  order: 1;
   opacity: 0.8;
 }
 
