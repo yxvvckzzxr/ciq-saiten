@@ -247,11 +247,21 @@ body.page-wrapper {
   width: min(var(--container-wide), calc(100vw - var(--wide-gutter)));
 }
 
+/* 中部枠の説明。チェックの意味(順位に効く)をその場で読ませる */
+.chubu-priority-note {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-13);
+  color: var(--ink-2);
+  line-height: var(--lh-body);
+}
+
 /* 大会名ヘッダー — 大会が主役、CIQ は黒衣。
-   中央寄せをやめ、本文と同じ左の基準線に揃えて読み出しを1本にする。 */
+   見出しと副題は中央揃え。左揃えだと見出しはカードの外枠に、本文はカードの内側
+   (padding のぶん内側)に来るため、基準線が2本に見えて揃って見えなかった。 */
 .page-logo {
   padding: 0;
   margin-bottom: var(--sp-2);
+  text-align: center;
 }
 
 .page-logo .logo-icon {
@@ -357,6 +367,9 @@ body.page-wrapper {
 
 .entry-steps {
   margin-bottom: var(--sp-1);
+  /* 見出しに揃えて中央。safe を付けないと、狭い画面で溢れたときに
+     先頭のステップが切れてスクロールでも戻せなくなる。 */
+  justify-content: safe center;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
   scrollbar-width: none;
@@ -667,6 +680,13 @@ body.page-wrapper:has(#terms-card) .page-container {
   gap: var(--sp-7);
   align-items: start;
   justify-content: center;
+}
+
+/* 目次が出ていないとき(読み込み中・エラー・見出しの無い規約)は本文が
+   先頭カラム=220px 側に入ってしまい、幅の狭い左寄せの塊になる。1カラムに畳む。
+   目次が「隠れている」場合と「そもそも無い」場合の両方を拾う。 */
+.terms-layout:not(:has(> .terms-toc:not(.u-hidden))) {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .terms-toc {
