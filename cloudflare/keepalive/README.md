@@ -35,11 +35,48 @@ cd cloudflare/keepalive && npx wrangler tail
 cron の発火自体を確認するなら Cloudflare ダッシュボードの
 Workers &rarr; ciq-supabase-keepalive &rarr; Settings &rarr; Trigger Events で次回実行時刻を見る。
 
+## 死活監視（HEALTHCHECK_URL）
+
+この Worker は黙って壊れうる（cron が飛ばない・`public_project_settings` の anon grant が
+将来のマイグレーションで外れる・鍵を作り直す・Worker ごと消える）。Cloudflare は cron の
+失敗を通知しないため、**成功したら外部の死活監視サービスに ping を送り、ping が途絶えたら
+向こうからメールが来る**構成にしている（dead man's switch）。Worker ごと死んでも検知できる。
+
+- 成功時: `HEALTHCHECK_URL` に POST
+- 失敗時: `HEALTHCHECK_URL/fail` に POST（猶予を待たず即通知）
+- 監視側が落ちていても keepalive 本体の判定には影響しない
+
+### 設定手順
+
+1. https://healthchecks.io/ で無料アカウントを作る（無料枠 20 チェック）。
+2. チェックを 1 つ作り、以下を設定する。
+   - Name: `ciq-supabase-keepalive`
+   - Period: **1 day**
+   - Grace Time: **12 hours**
+   - 1 日 2 回 ping するので、36 時間 ping が無ければ通知が来る。
+     Supabase の停止猶予 7 日に対して 5 日以上の余裕がある。
+3. 表示された Ping URL（`https://hc-ping.com/<uuid>`）を Secret に入れる。
+
+```bash
+cd cloudflare/keepalive && npx wrangler secret put HEALTHCHECK_URL
+```
+
+4. 動作確認。公開 URL を 1 回叩き、healthchecks.io 側のチェックが緑になれば繋がっている。
+
+```bash
+curl -s -o /dev/null -w "%{http_code}\n" https://ciq-supabase-keepalive.chromquiz.workers.dev
+```
+
+**Ping URL は `wrangler.toml` に書かないこと。** このリポジトリは public で、
+Ping URL は叩けば生存扱いにできる capability URL のため、公開すると第三者に障害を
+隠蔽されうる。必ず Secret を使う。
+
 ## 停止してしまった場合
 
 Worker が動いていても Supabase 側の障害などで 7 日空くことはありうる。
 停止した場合は Supabase ダッシュボードの対象プロジェクトで Restore を押す。復帰には数分かかる。
-**大会前日には手動で 1 回 Worker の URL を叩いて 200 を確認しておくこと。**
+死活監視を設定していれば異常はメールで飛んでくるが、**大会前日には念のため手動で 1 回
+Worker の URL を叩いて 200 を確認しておくこと**（監視自体の設定漏れを拾うため）。
 
 なお cron は Cloudflare 内部から `scheduled` ハンドラを直接呼ぶため、公開 URL やその証明書には依存しない。
 公開 URL が落ちていても keepalive 自体は動く（逆に、公開 URL が 200 でも cron の発火確認にはならない）。

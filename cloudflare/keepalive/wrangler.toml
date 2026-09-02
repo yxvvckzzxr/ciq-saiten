@@ -13,3 +13,9 @@ crons = ["0 3,15 * * *"]
 SUPABASE_URL = "https://pyzdlkwumhreepgkrcyb.supabase.co"
 SUPABASE_PUBLISHABLE_KEY = "sb_publishable_wiuKyYbhmIS8SPkcqxccsw_GdFbv72b"
 KEEPALIVE_PATH = "/rest/v1/public_project_settings?select=project_id&limit=1"
+
+# HEALTHCHECK_URL はここに書かない。リポジトリは public で、あの ping URL は
+# 「叩けば生存扱いにできる」capability URL のため、公開すると障害を隠蔽されうる。
+# 設定は Secret 経由:
+#   npx wrangler secret put HEALTHCHECK_URL
+# 未設定でも keepalive 本体は動く（通知だけがスキップされる）。
