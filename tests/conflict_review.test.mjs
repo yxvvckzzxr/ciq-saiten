@@ -72,6 +72,25 @@ describe('確定してもカードは動かない', () => {
   });
 });
 
+describe('開いたときは未確定の先頭が選ばれる', () => {
+  it('先頭固定ではなく未確定を探す', () => {
+    const fn = sliceFn(conflictSrc, 'render');
+    expect(fn).toMatch(/const firstUnresolved = currentConflicts\.findIndex\(conflict => !conflict\.finalResult\)/);
+    expect(fn).toMatch(/selectedIndex = firstUnresolved >= 0 \? firstUnresolved : 0/);
+  });
+
+  it('採点ページも同じ考え方で初期選択している', () => {
+    const fn = sliceFn(questionSrc, 'setInitialSelectionToFirstUnscored');
+    expect(fn).toMatch(/findIndex\(card => myScores\[card\.entryId\] === null\)/);
+    expect(fn).toMatch(/firstUnscoredIndex >= 0 \? firstUnscoredIndex : 0/);
+  });
+
+  it('判定後の送りは両ページとも単純に次のカードへ', () => {
+    expect(sliceFn(conflictSrc, 'advanceConflictSelection')).toMatch(/selectedIndex \+ 1/);
+    expect(sliceFn(questionSrc, 'advanceSelection')).toMatch(/selectedIndex \+ 1/);
+  });
+});
+
 describe('判定の挙動が採点ページと揃っている', () => {
   it('書き込みを待たずに手元の状態を反映する', () => {
     const fn = sliceFn(conflictSrc, 'setFinal');

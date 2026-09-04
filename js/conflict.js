@@ -356,7 +356,10 @@ async function render() {
         questionNumber: conflict.q,
     })));
     if (shouldResetConflictSelection) {
-        selectedIndex = 0;
+        // question.js の setInitialSelectionToFirstUnscored と同じく、未確定の先頭から始める。
+        // 確定済みカードは並び替えずその場に残るので、先頭固定だと確定済みを選んだ状態で開いてしまう。
+        const firstUnresolved = currentConflicts.findIndex(conflict => !conflict.finalResult);
+        selectedIndex = firstUnresolved >= 0 ? firstUnresolved : 0;
         shouldResetConflictSelection = false;
     } else if (previousSelected) {
         const nextIndex = currentConflicts.findIndex(conflict => (
