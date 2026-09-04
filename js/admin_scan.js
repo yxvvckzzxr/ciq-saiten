@@ -154,6 +154,33 @@
         // ============================
         // TAB 3: 模範解答
         // ============================
+        // 模範解答は { answer, altAnswers } で持つ。
+        // 入力は主答えと別解をまとめて「/」区切りの1つの文字列で受ける
+        // (先頭が主答え、以降が別解)。CSV の3列目と同じ区切りなので、
+        // 入力欄を増やさずに済み、覚えることも1つで済む。
+        // ============================
+        const MODEL_ALT_SEPARATOR = '/';
+
+        function makeEmptyModelAnswers(count) {
+            return Array.from({ length: count }, () => ({ answer: '', altAnswers: [] }));
+        }
+
+        function modelAnswerToText(entry) {
+            if (!entry) return '';
+            return [entry.answer || '', ...(entry.altAnswers || [])]
+                .filter(Boolean)
+                .join(` ${MODEL_ALT_SEPARATOR} `);
+        }
+
+        function textToModelAnswer(text) {
+            const parts = String(text || '')
+                .split(MODEL_ALT_SEPARATOR)
+                .map(part => part.trim())
+                .filter(Boolean);
+            return { answer: parts[0] || '', altAnswers: parts.slice(1) };
+        }
+
+        // ============================
         let dragSrcIdx = null;
         async function moveModelAnswer(index, direction) {
             const nextIndex = index + direction;
@@ -173,8 +200,16 @@
                 label.className = 'q-label';
                 label.textContent = `${i + 1}問`;
                 const answer = document.createElement('div');
-                answer.className = `q-answer${ans ? '' : ' model-answer-empty'}`;
-                answer.textContent = ans || '—';
+                const mainAnswer = ans?.answer || '';
+                answer.className = `q-answer${mainAnswer ? '' : ' model-answer-empty'}`;
+                answer.textContent = mainAnswer || '—';
+                const alts = ans?.altAnswers || [];
+                if (alts.length) {
+                    const altSpan = document.createElement('span');
+                    altSpan.className = 'model-answer-alts';
+                    altSpan.textContent = ` ${MODEL_ALT_SEPARATOR} ${alts.join(` ${MODEL_ALT_SEPARATOR} `)}`;
+                    answer.appendChild(altSpan);
+                }
                 const moveControls = document.createElement('div');
                 moveControls.className = 'model-move-controls';
                 const prevBtn = document.createElement('button');
@@ -257,7 +292,7 @@
                 item.addEventListener('click', () => {
                     if (item.querySelector('input')) return;
                     const ansDiv = item.querySelector('.q-answer');
-                    const current = modelAnswers[i] || '';
+                    const current = modelAnswerToText(modelAnswers[i]);
                     ansDiv.textContent = '';
                     const input = document.createElement('input');
                     input.type = 'text';
@@ -270,11 +305,10 @@
                     let canceled = false;
                     const save = async () => {
                         if (canceled) return;
-                        const newVal = input.value.trim();
-                        modelAnswers[i] = newVal;
-                        ansDiv.classList.toggle('model-answer-empty', !newVal);
-                        ansDiv.textContent = newVal || '—';
+                        modelAnswers[i] = textToModelAnswer(input.value);
                         item.draggable = true;
+                        // 主答えと別解を描き分ける必要があるのでセルを作り直す
+                        renderModelGrid();
                         await saveModelAnswers();
                     };
                     input.addEventListener('blur', save);
@@ -285,9 +319,8 @@
                         }
                         if (e.key === 'Escape') {
                             canceled = true;
-                            ansDiv.classList.toggle('model-answer-empty', !current);
-                            ansDiv.textContent = current || '—';
                             item.draggable = true;
+                            renderModelGrid();
                         }
                     });
                 });
@@ -300,11 +333,23 @@
             const reader = new FileReader();
             reader.onload = async e => {
                 const lines = e.target.result.split('\n').filter(l => l.trim());
-                modelAnswers = new Array(totalQuestions).fill('');
+                modelAnswers = makeEmptyModelAnswers(totalQuestions);
                 lines.forEach((line, idx) => {
                     const cols = line.split(',').map(c => c.trim().replace(/^"|"$/g, ''));
-                    if (cols.length >= 2 && !isNaN(parseInt(cols[0]))) { const q = parseInt(cols[0]); if (q >= 1 && q <= totalQuestions) modelAnswers[q - 1] = cols[1]; }
-                    else if (idx < totalQuestions) modelAnswers[idx] = cols[0];
+                    // 3列目が別解。セル内は「/」区切り(区切りにカンマは使えない)。
+                    const buildEntry = (answer, altCell) => ({
+                        answer: String(answer || '').trim(),
+                        altAnswers: String(altCell || '')
+                            .split(MODEL_ALT_SEPARATOR)
+                            .map(part => part.trim())
+                            .filter(Boolean),
+                    });
+                    if (cols.length >= 2 && !isNaN(parseInt(cols[0]))) {
+                        const q = parseInt(cols[0]);
+                        if (q >= 1 && q <= totalQuestions) modelAnswers[q - 1] = buildEntry(cols[1], cols[2]);
+                    } else if (idx < totalQuestions) {
+                        modelAnswers[idx] = buildEntry(cols[0], cols[1]);
+                    }
                 });
                 renderModelGrid();
                 showAdminToast(`${lines.length}件読み込み中...`);

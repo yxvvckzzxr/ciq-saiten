@@ -211,7 +211,9 @@ async function refreshDataInternal() {
     finalResults = finals;
     questionScorers = scorers;
     modelAnswers = {};
-    for (const row of modelRows) modelAnswers[row.question_number] = row.answer;
+    for (const row of modelRows) {
+        modelAnswers[row.question_number] = { answer: row.answer || '', altAnswers: row.altAnswers || [] };
+    }
 
     const renderStartedAt = performance.now();
     await render();
@@ -299,6 +301,7 @@ function buildConflicts() {
                 cellGenerationVersion: meta.cellGeneration?.version || null,
                 votes,
                 finalResult: finalResult?.result || null,
+                modelAltAnswers: modelAnswers[q]?.altAnswers || [],
             });
         }
     }
@@ -333,6 +336,7 @@ function getConflictRenderSignature(conflicts) {
             conflict.entryId,
             conflict.entryNumber,
             conflict.finalResult || '',
+            (conflict.modelAltAnswers || []).join('/'),
             conflict.modelAnswer || modelAnswers[conflict.q] || '',
             votes,
         ].join(':');
@@ -470,7 +474,9 @@ function createConflictCard(conflict, idx) {
     // cellUrlCache の状態: undefined=未取得 / null=取得中 / ''=取得済みで画像なし / 文字列=URL。
     // null を「取得済み」と数えると、取得中のカードに「画像がありません」と出てしまう。
     const isResolved = typeof cellUrl === 'string';
-    const modelAnswer = conflict.modelAnswer || modelAnswers[conflict.q] || '';
+    const modelRecord = modelAnswers[conflict.q];
+    const modelAnswer = conflict.modelAnswer || modelRecord?.answer || '';
+    const modelAlts = conflict.modelAltAnswers?.length ? conflict.modelAltAnswers : (modelRecord?.altAnswers || []);
 
     const card = document.createElement('div');
     card.className = `answer-card conflict-card ${conflict.finalResult ? 'resolved ' + conflict.finalResult : ''} ${idx === selectedIndex ? 'selected' : ''}`;
@@ -509,6 +515,13 @@ function createConflictCard(conflict, idx) {
     const model = document.createElement('span');
     model.className = 'conflict-review-answer';
     model.textContent = modelAnswer || '未登録';
+    // 別解は主答えに続けて薄く出す。ラベルは置かない(採点画面と同じ表記)。
+    if (modelAlts.length) {
+        const alts = document.createElement('span');
+        alts.className = 'conflict-review-alts';
+        alts.textContent = ` / ${modelAlts.join(' / ')}`;
+        model.appendChild(alts);
+    }
     const votes = document.createElement('span');
     votes.className = 'votes-mini';
     conflict.votes.forEach((vote, index) => {

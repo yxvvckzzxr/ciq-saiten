@@ -408,19 +408,21 @@
             }
             if (typeof updateDisclosureOpenStatus === 'function') updateDisclosureOpenStatus();
 
-            modelAnswers = new Array(totalQuestions).fill('');
+            modelAnswers = makeEmptyModelAnswers(totalQuestions);
             updateAdminOverview();
         }
 
         async function loadModelAnswersOnce() {
             if (modelAnswersLoaded) return;
             modelAnswersLoaded = true;
-            modelAnswers = new Array(totalQuestions).fill('');
+            modelAnswers = makeEmptyModelAnswers(totalQuestions);
             try {
                 const rows = await CIQSupabaseAPI.listModelAnswers(projectId);
                 rows.forEach(row => {
                     const idx = Number(row.question_number) - 1;
-                    if (idx >= 0 && idx < modelAnswers.length) modelAnswers[idx] = row.answer || '';
+                    if (idx >= 0 && idx < modelAnswers.length) {
+                        modelAnswers[idx] = { answer: row.answer || '', altAnswers: row.altAnswers || [] };
+                    }
                 });
             } catch (e) {
                 console.warn('模範解答の読み込みをスキップ:', e);

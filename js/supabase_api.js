@@ -2,6 +2,19 @@
  * CIQ Supabase API adapter.
  */
 
+// 別解は text[] で保存する。CSV や手入力からは「/」区切りの文字列で来るため、
+// 配列・文字列のどちらで渡されても空要素を落とした配列に揃える。
+const ALT_ANSWER_SEPARATOR = '/';
+
+function normalizeAltAnswers(value) {
+    const list = Array.isArray(value)
+        ? value
+        : String(value || '').split(ALT_ANSWER_SEPARATOR);
+    return list
+        .map(item => String(item || '').trim())
+        .filter(Boolean);
+}
+
 const CIQSupabaseAPI = {
     _cache: new Map(),
     _imageCache: new Map(),
@@ -677,11 +690,15 @@ const CIQSupabaseAPI = {
     async listModelAnswers(projectId) {
         const { data, error } = await this.client()
             .from('model_answers')
-            .select('question_number, answer')
+            .select('question_number, answer, alt_answers')
             .eq('project_id', projectId)
             .order('question_number', { ascending: true });
         if (error) throw error;
-        return data || [];
+        return (data || []).map(row => ({
+            question_number: row.question_number,
+            answer: row.answer || '',
+            altAnswers: normalizeAltAnswers(row.alt_answers),
+        }));
     },
 
     async saveModelAnswers(projectId, answers) {
@@ -692,19 +709,25 @@ const CIQSupabaseAPI = {
             .eq('project_id', projectId);
         if (deleteError) throw deleteError;
 
+        // 呼び出し側は文字列でも { answer, altAnswers } でも渡せる。
         const rows = (answers || [])
-            .map((answer, index) => ({
-                project_id: projectId,
-                question_number: index + 1,
-                answer: String(answer || '').trim(),
-            }))
+            .map((entry, index) => {
+                const source = (entry && typeof entry === 'object') ? entry : { answer: entry };
+                return {
+                    project_id: projectId,
+                    question_number: index + 1,
+                    answer: String(source.answer || '').trim(),
+                    alt_answers: normalizeAltAnswers(source.altAnswers),
+                };
+            })
+            // 主答えが空の問題は行ごと持たない(別解だけの行は意味を持たない)
             .filter(row => row.answer);
 
         if (rows.length === 0) return [];
         const { data, error } = await client
             .from('model_answers')
             .upsert(rows, { onConflict: 'project_id,question_number' })
-            .select('question_number, answer');
+            .select('question_number, answer, alt_answers');
         if (error) throw error;
         return data || [];
     },
@@ -1484,18 +1507,22 @@ const CIQSupabaseAPI = {
         });
     },
 
+    // 戻り値は { answer, altAnswers }。該当行が無ければ両方とも空。
     async getModelAnswer(projectId, questionNumber) {
         const { data, error } = await this.client()
             .from('model_answers')
-            .select('answer')
+            .select('answer, alt_answers')
             .eq('project_id', projectId)
             .eq('question_number', questionNumber)
             .single();
         if (error) {
-            if (error.code === 'PGRST116') return '';
+            if (error.code === 'PGRST116') return { answer: '', altAnswers: [] };
             throw error;
         }
-        return data?.answer || '';
+        return {
+            answer: data?.answer || '',
+            altAnswers: normalizeAltAnswers(data?.alt_answers),
+        };
     },
 
     async joinQuestionScorer(projectId, questionNumber) {
@@ -1631,6 +1658,7 @@ const CIQSupabaseAPI = {
                 cellPath: row.cell_path || null,
                 cellGenerationVersion: row.cell_generation_version || null,
                 modelAnswer: row.model_answer || '',
+                modelAltAnswers: normalizeAltAnswers(row.model_alt_answers),
                 votes: Array.isArray(row.votes) ? row.votes : [],
                 finalResult: row.final_result || null,
             };
