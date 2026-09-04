@@ -1,5 +1,5 @@
 // my.js — マイエントリー(参加者ハブ)
-// 1回の認証で: 受付番号+QRの確認 / 登録内容の編集 / 遅刻連絡 / 成績照会 / キャンセル。
+// 1回の認証で: 受付番号+二次元コードの確認 / 登録内容の編集 / 遅刻連絡 / 成績照会 / キャンセル。
 // 認証状態は my-entry が発行する短命トークンを sessionStorage に保持する
 // (タブを閉じると消える。パスワードはどこにも保存しない)。
 
@@ -245,7 +245,7 @@ function applyHubData(data) {
     // 受付番号
     el('my-number').textContent = String(myEntryData.entryNumber ?? '').padStart(3, '0');
 
-    // QR
+    // 二次元コード
     renderQr();
 
     // 登録内容
@@ -289,7 +289,7 @@ function renderReentrySection() {
     link.href = entryUrl.href;
 
     if (isEntryCurrentlyOpen()) {
-        note.textContent = 'キャンセル済みの方も、通常と同じ手順で再エントリーできます。新しい受付番号・パスワード・QRコードが発行されます。';
+        note.textContent = 'キャンセル済みの方も、通常と同じ手順で再エントリーできます。新しい受付番号・パスワード・二次元コードが発行されます。';
         link.hidden = false;
     } else {
         note.textContent = getEntryClosedReason();
@@ -320,7 +320,7 @@ async function downloadQr() {
         const image = new Image();
         await new Promise((resolve, reject) => {
             image.onload = resolve;
-            image.onerror = () => reject(new Error('QR画像を読み込めませんでした。'));
+            image.onerror = () => reject(new Error('二次元コード画像を読み込めませんでした。'));
             image.src = url;
         });
         const size = 720;
@@ -338,7 +338,7 @@ async function downloadQr() {
         a.download = `checkin_qr_${String(myEntryData?.entryNumber ?? '').padStart(3, '0')}.png`;
         a.click();
     } catch (e) {
-        showToast(e.message || 'QR画像を保存できませんでした。', 'error');
+        showToast(e.message || '二次元コード画像を保存できませんでした。', 'error');
     }
 }
 

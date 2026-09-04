@@ -1,10 +1,10 @@
-// signing.ts — HMAC署名の共通モジュール(参加者トークン / 受付QR / メール認証コード)
+// signing.ts — HMAC署名の共通モジュール(参加者トークン / 受付二次元コード / メール認証コード)
 //
 // 署名鍵は必ず環境変数から供給する。SUPABASE_URL(公開値)や固定文字列への
 // フォールバックは持たない。鍵が未設定なら SigningConfigError を投げ、
 // 「弱い鍵で署名を発行し続ける」より安全側(処理停止)に倒す。
 //
-// send-email(QR生成) / checkin-qr(QR検証) / participant_auth(トークン・QR再表示)は
+// send-email(二次元コード生成) / checkin-qr(二次元コード検証) / participant_auth(トークン・二次元コード再表示)は
 // すべてこの signingSecret() を共有するため、同一鍵で相互に検証できる。
 
 const encoder = new TextEncoder();

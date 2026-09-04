@@ -214,8 +214,8 @@ function qrCard(qrImageUrl: string) {
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:16px 0;">
     <tr>
       <td class="ciq-mail-surface" align="center" style="border:1px solid ${MAIL.border};border-radius:22px;padding:22px;background:${MAIL.surface};">
-        <img src="${escapeHtml(qrImageUrl)}" alt="当日受付用QRコード" width="176" height="176" style="display:block;margin:0 auto;border:0;">
-        <div class="ciq-mail-label-strong" style="font-family:${MAIL_FONT};color:${MAIL.text};font-size:13px;font-weight:800;margin-top:12px;">当日受付用QRコード</div>
+        <img src="${escapeHtml(qrImageUrl)}" alt="当日受付用二次元コード" width="176" height="176" style="display:block;margin:0 auto;border:0;">
+        <div class="ciq-mail-label-strong" style="font-family:${MAIL_FONT};color:${MAIL.text};font-size:13px;font-weight:800;margin-top:12px;">当日受付用二次元コード</div>
         <div class="ciq-mail-sub" style="font-family:${MAIL_FONT};color:${MAIL.sub};font-size:12px;margin-top:2px;">当日受付で提示してください。</div>
       </td>
     </tr>
@@ -286,10 +286,10 @@ function entryConfirmation(data: Record<string, unknown>): EmailTemplate {
     ${detailsTable([['パスワード', password], ['状態', status]])}
     <p class="ciq-mail-note" style="margin:0;font-family:${MAIL_FONT};color:${MAIL.sub};font-size:13px;text-align:left;">パスワードはマイエントリー、編集、キャンセルなどに使用します。</p>
     ${qrCard(qrImageUrl)}
-    ${panel('このメールには受付QRとマイエントリー用の情報が含まれます。大会当日まで保存してください。', 'info')}
+    ${panel('このメールには受付二次元コードとマイエントリー用の情報が含まれます。大会当日まで保存してください。', 'info')}
     ${buttonPair('マイエントリー', myUrl, 'エントリーリスト', entryListUrl)}
     <p class="ciq-mail-note" style="margin:0;font-family:${MAIL_FONT};color:${MAIL.sub};font-size:13px;line-height:1.8;text-align:left;">
-      マイエントリーでは、登録内容の確認・変更、遅刻の連絡、QRコードの再表示ができます。
+      マイエントリーでは、登録内容の確認・変更、遅刻の連絡、二次元コードの再表示ができます。
     </p>
   `;
   return {
@@ -301,8 +301,8 @@ function entryConfirmation(data: Record<string, unknown>): EmailTemplate {
       `受付番号: ${entryNumber}`,
       data.status === 'waitlist' ? `状態: ${status}` : '',
       `パスワード: ${password}`,
-      'このメールには受付QRとマイエントリー用の情報が含まれます。大会当日まで保存してください。',
-      'QRコードはマイエントリーからも再表示できます。',
+      'このメールには受付二次元コードとマイエントリー用の情報が含まれます。大会当日まで保存してください。',
+      '二次元コードはマイエントリーからも再表示できます。',
       myUrl ? `マイエントリー: ${myUrl}` : '',
       entryListUrl ? `エントリーリスト: ${entryListUrl}` : '',
     ].filter(Boolean).join('\n'),

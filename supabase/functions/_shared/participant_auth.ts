@@ -87,9 +87,9 @@ export async function verifyParticipantToken(token: string, projectId: string) {
 }
 
 /**
- * 当日受付QRの署名付き画像URL(checkin-qr)を生成する。
+ * 当日受付二次元コードの署名付き画像URL(checkin-qr)を生成する。
  * メール(send-email)と同一のデータ・同一の署名鍵を使うため、
- * my.html で表示したQRは受付側でそのまま読み取れる。
+ * my.html で表示した二次元コードは受付側でそのまま読み取れる。
  */
 export async function signedQrUrl(value: string) {
   if (!value) return '';

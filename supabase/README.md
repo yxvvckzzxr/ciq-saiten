@@ -84,7 +84,7 @@ Use a long random value for `CIQ_EMAIL_SIGNING_SECRET`. It signs verification co
 - `score_events` is append-only from the client perspective and should be used as the audit trail for scoring changes.
 - `email_events` stores delivery metadata only. Never store raw recipient addresses there; use `recipient_hash`.
 - Keep `SUPABASE_SERVICE_ROLE_KEY`, Brevo API keys, and AWS secrets only in Supabase Edge Function secrets.
-- Public participant functions are browser-callable with the publishable key, but provider credentials, QR signing, and participant-token signing stay inside Edge Function secrets.
+- Public participant functions are browser-callable with the publishable key, but provider credentials, 2D code signing, and participant-token signing stay inside Edge Function secrets.
 - `send-email` rejects verification mail unless the project exists and entry reception is currently open.
 - Entry confirmation, edit, cancellation, late notice, and waitlist promotion mails require a matching `projectId`, `entryId`, recipient address, and `emailHash`.
 - The browser never sends email provider credentials or a service role key.

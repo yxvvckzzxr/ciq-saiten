@@ -14,7 +14,7 @@
 - Email-verified entry.
 - Public entry list.
 - Entry edit, cancellation, late notice, and score disclosure.
-- QR code based event-day check-in.
+- Event-day check-in by scanning a two-dimensional code.
 
 ## Answer Workflow
 

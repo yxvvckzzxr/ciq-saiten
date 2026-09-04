@@ -11,7 +11,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.min.js" integrity="sha384-fx4y4cDx8NYfissnVzdGJY3yVXWY3rn5ab5HTUjpvgT35oDiyAbjjqnLhnRmESNE" crossorigin="anonymous"></script>
     <script defer src="js/supabase_config.js?v=2"></script>
     <script defer src="js/supabase_client.js"></script>
-    <script defer src="js/supabase_api.js?v=36"></script>
+    <script defer src="js/supabase_api.js?v=37"></script>
     <script defer src="js/crypto.js"></script>
     <script defer src="js/icons.js?v=8"></script>
     <script defer src="js/ui.js?v=22"></script>
@@ -251,24 +251,24 @@
                     <span class="phase-num" aria-hidden="true">3</span>
                     <span class="phase-label">
                         <span class="phase-title">当日</span>
-                        <span class="phase-desc">QRコードで当日受付を行う</span>
+                        <span class="phase-desc">二次元コードで当日受付を行う</span>
                     </span>
                 </button>
                 <div class="tab-content" id="tab-checkin" role="tabpanel" aria-labelledby="tab-checkin-tab" hidden>
                     <div class="phase-block">
                         <h2>受付画面</h2>
-                        <p class="checkin-panel-note">参加者にQRコードをかざしてもらう画面です。受付卓の端末で開いてください。</p>
+                        <p class="checkin-panel-note">参加者に二次元コードをかざしてもらう画面です。受付卓の端末で開いてください。</p>
                         <div class="phase-actions">
                             <button class="btn" data-nav-target="checkin.html"><span data-icon="qrcode" aria-hidden="true"></span> 受付画面を開く</button>
                         </div>
                     </div>
 
-                    <!-- QRが読めないときの手入力受付。参加者に向いた checkin.html ではなく運営専用のこの画面に置く。
+                    <!-- 二次元コードが読めないときの手入力受付。参加者に向いた checkin.html ではなく運営専用のこの画面に置く。
                          受付番号は公開情報(エントリーリスト)なので、番号だけで受付状態を書き換えられる操作を
                          参加者の目の前にある受付卓の画面に残さないため。サーバ側も owner/admin 限定。 -->
                     <div class="phase-block">
                         <h2>受付番号で手動受付</h2>
-                        <p class="checkin-panel-note">QRが読めない参加者は、受付番号で照会して本人を確認してから受付します。</p>
+                        <p class="checkin-panel-note">二次元コードが読めない参加者は、受付番号で照会して本人を確認してから受付します。</p>
                         <div class="checkin-manual-panel">
                             <form class="checkin-manual-row" id="manual-checkin-form">
                                 <input type="number" id="manual-checkin-number" inputmode="numeric" min="1" step="1"
@@ -732,7 +732,7 @@
                 </dl>
                 <div class="admin-entry-receipt">
                     <img id="admin-entry-receipt-image" alt="代理エントリー控え画像" hidden>
-                    <div class="page-msg info is-visible" id="admin-entry-receipt-status">QRコード入り控え画像を生成しています...</div>
+                    <div class="page-msg info is-visible" id="admin-entry-receipt-status">二次元コード入り控え画像を生成しています...</div>
                 </div>
                 <div class="admin-entry-result-actions">
                     <button type="button" class="btn secondary" data-action="copy-admin-entry-template"><span data-icon="file-lines" aria-hidden="true"></span> 定型文をコピー</button>
@@ -743,11 +743,11 @@
         </div>
     </div>
 
-    <script defer src="js/admin.js?v=38"></script>
+    <script defer src="js/admin.js?v=39"></script>
     <script defer src="js/upload_validation.js?v=3"></script>
     <script defer src="js/admin_scan.js?v=16"></script>
     <script defer src="js/admin_stats.js?v=11"></script>
     <script defer src="js/admin_graded_pdf.js?v=9"></script>
-    <script defer src="js/admin_settings.js?v=36"></script>
+    <script defer src="js/admin_settings.js?v=37"></script>
 </body>
 </html>

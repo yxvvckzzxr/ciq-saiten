@@ -189,7 +189,7 @@ describe('production UI contracts', () => {
     const my = read('js/my.js');
     expect(my).toContain("myEntryData.status !== 'canceled'");
     expect(my).toContain("entryUrl.searchParams.set('reentry', '1')");
-    expect(my).toContain('新しい受付番号・パスワード・QRコードが発行されます。');
+    expect(my).toContain('新しい受付番号・パスワード・二次元コードが発行されます。');
 
     const entry = read('js/entry.js');
     expect(entry).toContain("const isReentry = params.get('reentry') === '1'");

@@ -549,7 +549,7 @@ View に対して `entry_open = true` のプロジェクトのみ anon SELECT �
 5. PII を `rsa_public_key` で RSA 暗号化
 6. `disclosure_pw` を SHA-256 ハッシュ化
 7. `entries` INSERT
-8. SES で確認メール（受付番号・パスワード・QR uuid）
+8. SES で確認メール（受付番号・パスワード・二次元コードの uuid）
 9. `{ entryNumber, uuid }` 返却（**平文パスワードはレスポンスに含めない**。メール必須のため）
 
 ### メール認証（send-verification / verify-email-code）
