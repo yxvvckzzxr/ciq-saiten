@@ -49,7 +49,7 @@
 | A1 | 匿名の外部者 | 荒らし・愉快犯 | 公開 URL・anon key・API 直叩き |
 | A2 | 正規参加者（悪意） | 他人のなりすまし・優位取得 | 有効な email+パスワード・自分のトークン |
 | A3 | 元運営メンバー（removed） | 私怨・データ持ち出し | 過去の Google アカウント |
-| A4 | 中間者/端末共有 | セッション窃取 | 公共端末・肩越し・QR スクショ |
+| A4 | 中間者/端末共有 | セッション窃取 | 公共端末・肩越し・二次元コード スクショ |
 | A5 | 供給網 | 広範囲改ざん | CDN・依存ライブラリ侵害 |
 
 ### 信頼境界
@@ -66,7 +66,7 @@
 | 参加者登録 | create-entry | なし（公開） | CAPTCHA/IP制限なし → 大量登録可 |
 | メール認証コード | send-email (send_verification) | なし | 任意宛先へ送信可（メール爆撃面） |
 | 参加者ハブ | my-entry / edit-entry / cancel-entry / mark-late / disclose-result | email+pwハッシュ or 短命トークン | HMAC 署名鍵の設定が鍵 |
-| 当日受付 | check-in / checkin-qr / admin-entry-qr | 運営 JWT / 署名付URL | QR 本体は素の entry UUID |
+| 当日受付 | check-in / checkin-qr / admin-entry-qr | 運営 JWT / 署名付URL | 二次元コード 本体は素の entry UUID |
 | 管理 | admin-create-entry / project-key | 運営 JWT（owner/admin） | RSA 秘密鍵の払い出し面 |
 | Data API 直 | PostgREST projects/entries/... | anon/authenticated + RLS | RLS が最終防衛線 |
 | Realtime | public_entry_list | anon（entry_open時） | entry UUID が公開される |
@@ -83,7 +83,7 @@
 | V4 | 参加者認証のグローバル/IP レート制限なし | High | A1/A2 が複数 email_hash・複数 IP から並列で総当たり。失敗記録は email_hash 単位（10回/10分）のみ | 認証総当たり・列挙・DoS | **IP 単位**のレート制限層（Edge 冒頭で共通化）、超過で 429、生 IP を保存しない。※運用モデル前提により project 分離は不要（下記注記） | P1 |
 | V5 | CORS Allow-Origin: * + API 直叩き耐性 | Medium | 全 Edge が全オリジン許可。任意サイトから叩ける | 自動化された乱用・スクレイピング・各攻撃の増幅 | 本番オリジンの allowlist 化、入力バリデーション強化、レート制限で実質担保 | P1 |
 | V6 | エラーメッセージから内部情報漏洩 | Medium | 500 経路で `error.message` を返却。DB 制約名・SQL 断片が露出 | 内部スキーマ推測・攻撃の足がかり | 例外を分類し汎用文言（要確認 ID）のみ返す。詳細は console.error。共通ハンドラ化 | P1 |
-| V7 | QR 本体が素の entry UUID（署名なし・使い回し無期限） | Medium | A4 が他人の QR を提示 → 運営端末が受付処理 | なりすまし受付・受付状態の完全性低下 | QR を HMAC(entryId+nonce+exp) 署名付きに、または受付時に受付番号照合を必須化 | P2 |
+| V7 | 二次元コード 本体が素の entry UUID（署名なし・使い回し無期限） | Medium | A4 が他人の 二次元コード を提示 → 運営端末が受付処理 | なりすまし受付・受付状態の完全性低下 | 二次元コード を HMAC(entryId+nonce+exp) 署名付きに、または受付時に受付番号照合を必須化 | P2 |
 | V8 | 第三者 CDN スクリプトに SRI なし（供給網） | Medium | A5 が CDN 上のライブラリを改ざん → 任意 JS 実行 | XSS 相当・鍵/PII 窃取 | 依存をセルフホスト or SRI+版固定。CSP から不要 CDN 削除 | P2 |
 | V9 | RSA 秘密鍵が localStorage 保持（XSS 時に露出） | Medium | XSS で `localStorage.privateKeyJwk` を窃取 → 全 PII 復号 | 全 PII 復号 | session 限定保持、CSP 強化、fetch 頻度最小化 | P2 |
 | V10 | 参加者/service_role 操作が監査ログ外 | Medium | 参加者系は service_role 実行で `auth.uid()` null → 証跡が残らない | インシデント追跡不能 | service_role 用の監査挿入経路（種別=participant、IP/ID のみ、PII なし） | P2 |
@@ -104,7 +104,7 @@
 ## 5. Phase 1 / 2 / 3 改善計画
 - **Phase 1 — 「一般公開の前提条件」**（既存コード活用・破壊的変更なし）: V1 フォールバック撤去＋env、V2 IP レート＋CAPTCHA＋日次上限、V6 共通エラーハンドラ、V4 IP レート制限。
 - **Phase 2 — 「多層防御・データ保護」**: V3 pepper、V5 CORS allowlist、V8 SRI/セルフホスト、V12 登録メール認証必須、V10 監査ログ。
-- **Phase 3 — 「堅牢化・運用」**: V7 QR 署名、V9 鍵 session 化、V11/V13 除名判定統一・依存固定、統合回帰テスト・可観測性。
+- **Phase 3 — 「堅牢化・運用」**: V7 二次元コード 署名、V9 鍵 session 化、V11/V13 除名判定統一・依存固定、統合回帰テスト・可観測性。
 
 ## 5.1 実装状況（2026-07-26 更新・詳細は docs/security-migration-status.md）
 - **V1 = Completed**（フォールバック撤去・未設定で例外・本番 env 設定済・鍵ローテ手順を付録A に文書化）
@@ -121,7 +121,7 @@
 - **V12 = Completed**（2026-07-26）。CAPTCHA・メール認証必須・1メール1エントリ・IP レートの 4 条件は
   Phase 1（V2）と P2-e5 の成果で既に充足しており、追加実装は不要だった。
 - **Phase 2 判定 = ✅ Completed**（V3 ✅ / V5 ✅ / V8 ✅ / V10 ✅ / V12 ✅）。
-- **V7 = Completed**（2026-07-26）。QR を署名付きトークン化（entryId.exp.sig）し check-in で検証、
+- **V7 = Completed**（2026-07-26）。二次元コード を署名付きトークン化（entryId.exp.sig）し check-in で検証、
   素の UUID は拒否。公開リストから entry UUID を列権限で除外し、受付 UI に受付番号フォールバックを追加。
 - **V9 = Completed**（2026-07-26）。RSA 秘密鍵を localStorage から sessionStorage 限定保持へ（旧値は初回読出で移行・削除）。
 - **V11 = Completed**（2026-07-26）。check-in を admin-* と同じ「active かつ owner/admin/scorer」に統一。
@@ -144,7 +144,7 @@
 - **P3（継続）**: V11 → V13 + テスト/監視整備
 
 ## 7. テスト計画（要旨）
-単体（Vitest）／RLS・Grant（PostgREST 直叩き）／Edge（署名鍵未設定で起動失敗・無効トークン拒否・CORS 拒否・レート超過 429・CAPTCHA 無しで拒否）／認証バイパス回帰／メール乱用／QR／回帰（`npm test`・`node --check`・`git diff --check`）。各 Phase 完了時に該当分をゲートにする。
+単体（Vitest）／RLS・Grant（PostgREST 直叩き）／Edge（署名鍵未設定で起動失敗・無効トークン拒否・CORS 拒否・レート超過 429・CAPTCHA 無しで拒否）／認証バイパス回帰／メール乱用／二次元コード／回帰（`npm test`・`node --check`・`git diff --check`）。各 Phase 完了時に該当分をゲートにする。
 
 ## 8. ロールバック計画（要旨）
 小さく可逆に。Edge は関数単位で旧版へ即時再デプロイ。migration は down 手順を用意し破壊的な列削除はしない（新列追加→二重書き→検証→切替）。CAPTCHA/レート制限は env フラグで ON/OFF。判断基準＝正規参加者エラー率・受付停止・メール不達で該当 Phase を revert。
@@ -156,7 +156,7 @@
 
 ## 付録A: 署名鍵ローテーション手順（V1 完了条件）
 
-対象秘密: `CIQ_EMAIL_SIGNING_SECRET`（無ければ `CIQ_EDGE_INTERNAL_SECRET`）。用途＝参加者短命トークン・受付 QR・
+対象秘密: `CIQ_EMAIL_SIGNING_SECRET`（無ければ `CIQ_EDGE_INTERNAL_SECRET`）。用途＝参加者短命トークン・受付 二次元コード・
 メール認証コードの HMAC 署名（`_shared/signing.ts`）。**32byte 以上（`openssl rand -hex 32` = 64 hex 文字）必須。**未設定/短すぎると
 `SigningConfigError` で該当機能は停止する（fail-closed）。
 
@@ -165,15 +165,15 @@
 2. 本番へ投入: `supabase secrets set CIQ_EMAIL_SIGNING_SECRET=<new> --project-ref pyzdlkwumhreepgkrcyb`
 3. 署名鍵を使う Edge Function を再デプロイして確実に反映:
    `send-email` / `checkin-qr` / `my-entry` / `edit-entry` / `cancel-entry` / `mark-late` / `disclose-result`
-   （participant_auth 経由のトークン検証・QR 再表示を含む）
+   （participant_auth 経由のトークン検証・二次元コード 再表示を含む）
 4. 反映確認: `GET /functions/v1/checkin-qr?d=<uuid>&s=deadbeef` が **404**（＝鍵設定済み・長さ充足）を返すこと。503 なら未反映。
 
 影響（不可逆な失効）:
 - 旧鍵で発行済みの**参加者セッショントークンは全て無効化**→ 参加者は my.html で再ログインが必要。
-- 旧鍵で署名済みの**受付 QR URL・メール内 QR は検証不能**になる → my.html は再表示で新 QR を生成。配布済みメール内 QR は無効。
-- よってローテーションは大会当日直前〜当日は避ける（受付 QR 失効を防ぐ）。
+- 旧鍵で署名済みの**受付 二次元コード URL・メール内 二次元コード は検証不能**になる → my.html は再表示で新 二次元コード を生成。配布済みメール内 二次元コード は無効。
+- よってローテーションは大会当日直前〜当日は避ける（受付 二次元コード 失効を防ぐ）。
 
-ロールバック: 旧鍵を `supabase secrets set` で再投入し、上記 Edge を再デプロイすれば旧トークン/QR が再び有効化する
+ロールバック: 旧鍵を `supabase secrets set` で再投入し、上記 Edge を再デプロイすれば旧トークン/二次元コード が再び有効化する
 （旧鍵を安全に保管している場合のみ）。
 
 ## 付録B: メール日次上限（V2 backstop）の運用
@@ -244,7 +244,7 @@ Turnstile の site key / secret key を再発行した場合: Cloudflare で新 
   | 指定 | 用途 | 状態 |
   |---|---|---|
   | `https://esm.sh/@supabase/supabase-js@2.110.1` | Supabase クライアント（`_shared/supabase.ts`） | 厳密固定 ✅ |
-  | `npm:qrcode@1.5.4` | 受付QR画像生成（`_shared/qr.ts`） | 厳密固定 ✅ |
+  | `npm:qrcode@1.5.4` | 受付二次元コード画像生成（`_shared/qr.ts`） | 厳密固定 ✅ |
 - ブラウザ側の supabase-js（各 HTML の SRI 付き script）と**同一バージョンに揃える**。
 
 ### D-2. 継続検証（自動）
@@ -281,7 +281,7 @@ Turnstile の site key / secret key を再発行した場合: Cloudflare で新 
 - `npm:qrcode@1.5.4` の**推移的依存には semver 範囲が含まれる**（`pngjs ^5.0.0` / `yargs ^15.3.1` /
   `dijkstrajs ^1.0.1`）。
 - そのため**再デプロイ時に推移的依存の解決結果が変わる可能性を完全には排除できない**。
-- **影響範囲は現在 QR 画像生成に限定**される（`checkin-qr` / `my-entry` / `admin-entry-qr`）。
+- **影響範囲は現在 二次元コード 画像生成に限定**される（`checkin-qr` / `my-entry` / `admin-entry-qr`）。
   参加者認証・DB アクセス・メール送信の経路には及ばない。
 - **完全な決定性**を得るには、qrcode 依存の **vendoring** または**別実装への置換**が必要
   （vendoring 実測: remote 依存は `vendor/` に取り込めるが、`npm:` 依存は `node_modules/` に展開され
@@ -306,12 +306,12 @@ Turnstile の site key / secret key を再発行した場合: Cloudflare で新 
 **位置づけ**: 「deno.lock を実施しなかった」のではなく、**「生成可能だが、現行プラットフォームでは
 デプロイ時に適用不能であると実証した」**。Evidence と残余リスクは付録D に記載。
 
-### 2026-07-26 — V7 の QR TTL を再評価（400日 → 既定30日・env 連動）
-初回実装の TTL 400 日は「配布済み QR を壊さない」ための便宜的な値で、セキュリティ要件から導いたものではなかった。
-QR 画像は表示のたびに再生成されるため長期有効である必要は無く、長期を要するのは
+### 2026-07-26 — V7 の 二次元コード TTL を再評価（400日 → 既定30日・env 連動）
+初回実装の TTL 400 日は「配布済み 二次元コード を壊さない」ための便宜的な値で、セキュリティ要件から導いたものではなかった。
+二次元コード 画像は表示のたびに再生成されるため長期有効である必要は無く、長期を要するのは
 メールクライアントのキャッシュ／保存画像が「登録 → 大会当日」を跨ぐ場合に限られる。
 既定を **30 日**とし、`CIQ_QR_TTL_DAYS`（1〜400 にクランプ）で運用に合わせて短縮できるようにした。
-期限切れ時の回復手段は (a) マイエントリーでの再表示（常に新しい QR）(b) 受付番号での受付。
+期限切れ時の回復手段は (a) マイエントリーでの再表示（常に新しい 二次元コード）(b) 受付番号での受付。
 `projects.period_end` が未設定のため大会終了日時への自動連動は採用せず、env による明示設定とした。
 
 ### 2026-07-26 — Additional Security Backlog を親計画から分離

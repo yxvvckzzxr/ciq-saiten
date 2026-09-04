@@ -1,4 +1,4 @@
-// checkin.js - QR受付（Supabase）
+// checkin.js - 二次元コード受付（Supabase）
 
 const auth = requireAuth();
 const { projectId } = auth || {};
@@ -40,7 +40,7 @@ if (auth) {
     async function init() {
         try {
             if (typeof jsQR !== 'function') {
-                throw new Error('QR読み取りライブラリを読み込めませんでした。ページを再読み込みしてください。');
+                throw new Error('二次元コード読み取りライブラリを読み込めませんでした。ページを再読み込みしてください。');
             }
             if (!window.CIQSupabaseAPI?.isEnabled?.()) {
                 throw new Error('Supabase設定が見つかりません。');
@@ -129,7 +129,7 @@ if (auth) {
         await video.play();
         await waitForVideoReady();
         scanningText.textContent = '';
-        scanningText.append(makeIcon('camera'), ' QRコードをカメラにかざしてください');
+        scanningText.append(makeIcon('camera'), ' 二次元コードをカメラにかざしてください');
         scanFrameId = requestAnimationFrame(scanFrame);
     }
 
@@ -275,7 +275,7 @@ if (auth) {
             numberEl.textContent = number;
             resultDiv.appendChild(numberEl);
         }
-        scanningText.textContent = 'QRコードをカメラにかざしてください';
+        scanningText.textContent = '二次元コードをカメラにかざしてください';
 
         hideTimer = setTimeout(() => {
             resultDiv.classList.remove('is-visible');

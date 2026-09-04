@@ -527,23 +527,23 @@ Notes   : V12 は Phase 1 の V2（Turnstile / IP レート / 日次上限）と
           既に満たされていた。**Phase 2 = 全 V 完了（V3 ✅ / V5 ✅ / V8 ✅ / V10 ✅ / V12 ✅）**。次は V14。
 ```
 
-### V7 当日受付QRの署名化と entry UUID の非公開化（Phase 3・ゼロベース監査）
+### V7 当日受付二次元コードの署名化と entry UUID の非公開化（Phase 3・ゼロベース監査）
 ```
 Status  : Completed — 2026-07-26（監査時 Partially Completed → 不足分を実装して Completed）
-初期計画 : 脅威=QR 本体が素の entry UUID（署名なし・使い回し無期限）。A4 が他人の QR を提示すると受付が通る
-           修正方針=QR を HMAC(entryId+nonce+exp) 署名付きにし check-in で検証、**または**受付時に受付番号照合を
+初期計画 : 脅威=二次元コード 本体が素の entry UUID（署名なし・使い回し無期限）。A4 が他人の 二次元コード を提示すると受付が通る
+           修正方針=二次元コード を HMAC(entryId+nonce+exp) 署名付きにし check-in で検証、**または**受付時に受付番号照合を
            必須化。**少なくとも** entry UUID を公開リストから除外
 監査時点の実装（既存・書き換えていない）:
-  - checkin-qr の **URL** は HMAC 署名済み（任意データの QR 画像生成は不可）
+  - checkin-qr の **URL** は HMAC 署名済み（任意データの 二次元コード 画像生成は不可）
   - check-in は認証済み active メンバー必須、canceled/waitlist 拒否、二重受付は 'already'、監査ログ記録（V10）
 不足していた点（今回実装）:
-  1. QR の中身が素の entry UUID（署名・期限・nonce なし）
+  1. 二次元コード の中身が素の entry UUID（署名・期限・nonce なし）
   2. check-in が未検証の UUID で `.eq('id', entryId)` 照合
   3. **entry UUID が anon から公開取得可能**（実際に公開 API で実 UUID を取得できることを確認）
 実装:
   - _shared/qr_token.ts: `entryId.exp.sig`（sig=HMAC(signingSecret, `qr:id:exp`)、既定 TTL 400日）
     issueQrToken / verifyQrToken。旧形式（素の UUID）は verify が null＝**fail-closed**
-  - QR 生成 3 経路すべてを署名トークンに: my-entry(qrSvg) / admin-entry-qr / checkin-qr
+  - 二次元コード 生成 3 経路すべてを署名トークンに: my-entry(qrSvg) / admin-entry-qr / checkin-qr
     ※画像は都度サーバ生成のため、既存メールの URL からも次回表示時に新形式が描画される
   - check-in: verifyQrToken で検証してから id 照合。素の UUID は 400 で拒否
   - migration 202607260002: public_entry_list の blanket SELECT を revoke し、**entry_id を除く列のみ**を
@@ -551,7 +551,7 @@ Status  : Completed — 2026-07-26（監査時 Partially Completed → 不足分
   - js/supabase_api.js: 公開リストの select から entry_id を除去（キーは entry_number に変更。
     entry_list.js は Object.values 利用のためキー非依存）
   - 運用フォールバック（親計画の代替策「受付番号照合」）: 受付 UI に受付番号入力を追加
-    （checkin.html / checkin.js / css）。キャッシュ済みの旧 QR でも受付を継続できる
+    （checkin.html / checkin.js / css）。キャッシュ済みの旧 二次元コード でも受付を継続できる
 Evidence:
   - Tests   : tests/qr_token.test.mjs（14 件・**実装を直接 import**）— 発行/検証ラウンドトリップ、
               素の UUID 拒否、entryId すり替え拒否、署名改ざん拒否、exp 改ざん拒否、期限切れ拒否、
@@ -565,10 +565,10 @@ Evidence:
   - browser verification: 受付番号フォームが 375px で正しく描画（label↔input 関連付け、
     数値キーパッド、縦積み、ボタン全幅、横スクロールなし、--ink-2 が解決）
   - Commits : 601383b
-Rollback: Possible（Edge は旧版へ再デプロイ、migration は grant を戻せば復旧。QR は都度生成のため
+Rollback: Possible（Edge は旧版へ再デプロイ、migration は grant を戻せば復旧。二次元コード は都度生成のため
           旧版デプロイで即座に旧形式へ戻る）
-Notes   : 残留リスク=QR は依然として bearer（盗撮・スクショされた QR は有効期限内なら使える）。
-          これは受付番号・氏名の目視照合（結果パネルに表示）と、受付済み QR の再使用が 'already' に
+Notes   : 残留リスク=二次元コード は依然として bearer（盗撮・スクショされた 二次元コード は有効期限内なら使える）。
+          これは受付番号・氏名の目視照合（結果パネルに表示）と、受付済み 二次元コード の再使用が 'already' に
           なることで運用的に緩和する。V7 の完了条件が求める「署名化」「UUID 非公開化」は充足。
 ```
 
@@ -613,36 +613,36 @@ Notes   : **Phase 3 = 全 V 完了（V7 ✅ / V9 ✅ / V11 ✅ / V13 ✅）。�
           以降は V14（採点者参加コードの無塩 SHA-256）を Additional Security Backlog として扱う。
 ```
 
-### V7 再確認 — QR TTL の再評価と受付番号フォールバックの監査
+### V7 再確認 — 二次元コード TTL の再評価と受付番号フォールバックの監査
 ```
 Status  : Completed（V7 の最終状態）— 2026-07-26
 
 【1】TTL 400日の再評価 → **根拠不十分と判断し既定 30 日へ短縮（env 連動）**
-  - なぜ 400 日だったか : 「配布済み QR を壊さない」ための便宜値。セキュリティ要件から導いたものではない
-  - 大会期間と QR 必要期間 : projects.period_end は **NULL**（大会終了日時が未設定）。period_start=2026-07-03。
+  - なぜ 400 日だったか : 「配布済み 二次元コード を壊さない」ための便宜値。セキュリティ要件から導いたものではない
+  - 大会期間と 二次元コード 必要期間 : projects.period_end は **NULL**（大会終了日時が未設定）。period_start=2026-07-03。
     → 大会終了日時への自動連動は現データでは成立しないため採用せず、env による明示設定とした
-  - QR 画像は **表示のたびにサーバ再生成** されるため、本来必要な有効期間は「描画 → 受付」だけ。
+  - 二次元コード 画像は **表示のたびにサーバ再生成** されるため、本来必要な有効期間は「描画 → 受付」だけ。
     長期が要るのはメールクライアントのキャッシュ／保存画像が「登録 → 当日」を跨ぐ場合に限られる
   - リプレイ可能期間 : 変更前 **最大 400 日** → 変更後 **最大 30 日**（`CIQ_QR_TTL_DAYS` で 1 日まで短縮可）
-  - 受付済み QR の再利用 : `checked_in` の行は 'already' を返し、更新は
+  - 受付済み 二次元コード の再利用 : `checked_in` の行は 'already' を返し、更新は
     `.eq('checked_in', false).in('status', [...])` の条件付き UPDATE で**原子的に拒否**（状態は変わらない）
   - 過去大会・別大会での利用 : entryId は UUID で全体一意、check-in は
     `.eq('project_id', projectId).eq('id', verifiedId)` と **project スコープで照合**するため、
     他プロジェクトの受付には使えない
   - 署名対象 : `qr1:<entryId>:<expMs>`。**用途タグ + バージョン**を含む（今回追加）。
     project ID は含めないが、上記の project スコープ照合と UUID 全体一意性で代替（多重防御としては照合側で担保）
-  - 他用途との衝突 : 参加者トークン=base64url JSON、QR 画像 URL 署名=素の UUID、認証コード=`code:email:exp`。
+  - 他用途との衝突 : 参加者トークン=base64url JSON、二次元コード 画像 URL 署名=素の UUID、認証コード=`code:email:exp`。
     いずれも `qr1:` 接頭辞と形式が異なり**交差利用不可**
-  - 鍵ローテーション : `CIQ_EMAIL_SIGNING_SECRET` を更新すると全 QR が即時失効（付録A に手順と影響を記載済み）
+  - 鍵ローテーション : `CIQ_EMAIL_SIGNING_SECRET` を更新すると全 二次元コード が即時失効（付録A に手順と影響を記載済み）
   - 時計ずれ : **発行も検証も Edge（サーバ）側**で、クライアント時計に依存しない。
     ずれの考慮が要るのは Supabase 内部の時刻のみで、30 日の窓に対して無視できる
   - 実装 : `CIQ_QR_TTL_DAYS`（既定 30 / 1〜400 にクランプ / 不正値は既定）
-  - 期限切れ時の回復 : (a) マイエントリーで再表示（常に新しい QR）(b) 受付番号での受付
+  - 期限切れ時の回復 : (a) マイエントリーで再表示（常に新しい 二次元コード）(b) 受付番号での受付
 
 【2】受付番号フォールバックの監査（弱い迂回経路になっていないか）
   - staff 認証必須            : ✅ requireProjectMember（Google JWT 検証）
   - active な owner/admin/scorer のみ : ✅ V11 で `status !== 'active'` ＋ロール明示に統一
-  - anon から直接受付不可      : ✅ 本番実測 — 受付番号経路 **401** / QR 経路 **401** / stats **401**
+  - anon から直接受付不可      : ✅ 本番実測 — 受付番号経路 **401** / 二次元コード 経路 **401** / stats **401**
   - 総当たりのレート制限       : ✅ **今回追加**。`checkin_miss`（既定 30回/10分・IP 単位・
     `CIQ_RL_CHECKIN_MISS_IP`）。**失敗照会のみ**を数え、成功した受付は数えないため、
     当日の連続受付（正規のバースト）はスループットを落とさない
@@ -662,7 +662,7 @@ Evidence:
               entries 136 件・checked_in 2 件が**プローブ後も不変**
   - Commits : 4dc83fa
 Rollback: Possible（TTL は env で即時調整、コードは revert 可）
-Notes   : 残留リスク=QR は依然 bearer。窓は最大 30 日（env で短縮可）で、受付済みは再利用不可。
+Notes   : 残留リスク=二次元コード は依然 bearer。窓は最大 30 日（env で短縮可）で、受付済みは再利用不可。
           運用では結果パネルの氏名・受付番号を目視照合する。
 ```
 
@@ -692,7 +692,7 @@ Evidence（同等性が成立しない根拠）:
   - 回帰テストが保証すること : 直接 import に浮動指定が無いこと、Edge とブラウザの supabase-js 版一致
   - 回帰テストが保証できないこと : **間接依存の同一性**（バイト単位の再現性）、esm.sh 配信物の不変性
   - deno.lock を使わない残余リスク : 再デプロイ時に qrcode の推移的依存が別版へ解決され、
-    上流侵害や破壊的更新を受動的に取り込む可能性。影響範囲は QR 画像生成（checkin-qr / my-entry /
+    上流侵害や破壊的更新を受動的に取り込む可能性。影響範囲は 二次元コード 画像生成（checkin-qr / my-entry /
     admin-entry-qr）に限られ、参加者認証・DB アクセス経路には及ばない
 未実施の理由と次の一手 : ローカルに Deno 未導入のため lock を生成できず、かつ Supabase の
   デプロイ経路が lock を honor するかの検証が必要。実施時は
@@ -768,7 +768,7 @@ Evidence（実験結果・秘密値は含まない）:
 残余リスク（親計画完了の必須残件ではない・付録D-5 と同内容）:
   - `npm:qrcode@1.5.4` の推移的依存に **semver 範囲**が含まれる（pngjs ^5.0.0 / yargs ^15.3.1 / dijkstrajs ^1.0.1）
   - 再デプロイ時に推移的依存の解決結果が変わる可能性を**完全には排除できない**
-  - **影響範囲は現在 QR 画像生成に限定**（checkin-qr / my-entry / admin-entry-qr）
+  - **影響範囲は現在 二次元コード 画像生成に限定**（checkin-qr / my-entry / admin-entry-qr）
   - 完全な決定性には qrcode の **vendoring もしくは別実装への置換**が必要
   - **依存基盤の変更時に再評価する技術的残余リスク**として扱う（新しい V 番号や Backlog 項目は作らない）
 

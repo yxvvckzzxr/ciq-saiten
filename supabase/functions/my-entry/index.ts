@@ -2,7 +2,7 @@
 //
 // 認証(emailHash+パスワードハッシュ または 短命トークン)に成功すると、
 //   - エントリーサマリー(公開プロフィール + 状態)
-//   - 当日受付QRの署名付き画像URL(メールと同一データ・同一署名)
+//   - 当日受付二次元コードの署名付き画像URL(メールと同一データ・同一署名)
 //   - スライド延長された新しいセッショントークン
 // を返す。パスワードや復号PIIは返さない・保存しない。
 
@@ -78,9 +78,9 @@ Deno.serve(withCors(async (req) => {
     const disclosureOpen = project.disclosure_enabled === true
       && isWithinPeriod(project.disclosure_period_start, project.disclosure_period_end);
 
-    // 当日受付QR — 署名付きトークン(V7)を埋め込む。素の entry UUID は埋め込まない。
+    // 当日受付二次元コード — 署名付きトークン(V7)を埋め込む。素の entry UUID は埋め込まない。
     // メール(send-email/checkin-qr)と同一形式なので受付側でそのまま読める。
-    // キャンセル済みのQRは受付で弾かれるため返さない。
+    // キャンセル済みの二次元コードは受付で弾かれるため返さない。
     const qrSvg = status === 'canceled' ? '' : await makeQrSvg(await issueQrToken(entryId));
 
     const { token, expiresAt } = await issueParticipantToken({ projectId, entryId, emailHash });

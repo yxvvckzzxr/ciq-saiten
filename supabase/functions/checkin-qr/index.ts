@@ -25,8 +25,8 @@ Deno.serve(withCors(async (req) => {
   }
   if (!safeEqual(expected, signature)) return new Response('Not found', { status: 404 });
 
-  // URL 署名の検証後、QR には署名付きトークン(V7)を埋め込む。素の entry UUID は埋め込まない。
-  // 画像は表示のたびに生成されるため、既存メールのURLからも新形式のQRが描画される。
+  // URL 署名の検証後、二次元コード には署名付きトークン(V7)を埋め込む。素の entry UUID は埋め込まない。
+  // 画像は表示のたびに生成されるため、既存メールのURLからも新形式の二次元コードが描画される。
   const svg = await makeQrSvg(await issueQrToken(data));
   return new Response(svg, {
     headers: {

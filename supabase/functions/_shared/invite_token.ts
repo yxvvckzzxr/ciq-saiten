@@ -4,7 +4,7 @@
 // - DB には **平文を保存しない**。保存するのは HMAC(signingSecret, 'invite:' + token) のみ。
 //   → DB が流出しても、そこから招待リンクを復元して参加することはできない。
 // - 署名鍵は V1 で必須化済み（未設定なら SigningConfigError → 上位で 503）。
-// - 用途タグ 'invite:' で他用途の署名（参加者トークン / 受付QR / 認証コード）と分離する。
+// - 用途タグ 'invite:' で他用途の署名（参加者トークン / 受付二次元コード / 認証コード）と分離する。
 
 import { hmacHex, signingSecret } from './signing.ts';
 

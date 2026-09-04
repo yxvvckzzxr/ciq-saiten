@@ -30,7 +30,7 @@ Deno.serve(withCors(async (req) => {
 
   try {
     const { projectId, entryId } = await req.json();
-    if (!projectId || !entryId) return jsonResponse({ error: 'QRコードの取得に必要な情報が不足しています。参加者一覧を再読み込みしてください。' }, 400);
+    if (!projectId || !entryId) return jsonResponse({ error: '二次元コードの取得に必要な情報が不足しています。参加者一覧を再読み込みしてください。' }, 400);
 
     const supabase = createServiceClient();
     await requireAdminMember(supabase, req, projectId);
@@ -43,13 +43,13 @@ Deno.serve(withCors(async (req) => {
       .single();
     if (error || !entry) return jsonResponse({ error: 'エントリーが見つかりません。' }, 404);
 
-    // 署名付きトークン(V7)。素の entry UUID は QR に埋め込まない。
+    // 署名付きトークン(V7)。素の entry UUID は 二次元コード に埋め込まない。
     const svg = await makeQrSvg(await issueQrToken(entry.id));
     return jsonResponse({ ok: true, svg });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     if (message === 'Forbidden') {
-      return jsonResponse({ error: 'このプロジェクトのQRコードを取得する権限がありません。' }, 403);
+      return jsonResponse({ error: 'このプロジェクトの二次元コードを取得する権限がありません。' }, 403);
     }
     if (message === 'Authentication required') {
       return jsonResponse({ error: 'Googleログインが必要です。' }, 401);

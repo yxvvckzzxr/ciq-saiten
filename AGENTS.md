@@ -32,7 +32,7 @@ No Node/Express server exists. Do not introduce one. Business logic currently li
 - Admin: `admin.html`, `js/admin*.js`, `css/pages.css`.
 - Answer upload: `js/admin_prep.js`, `js/upload_validation.js`, Storage policies.
 - Judging: `judge.html`, `question.html`, `conflict.html`, `js/judge.js`, `js/question.js`, `js/conflict.js`.
-- Participant hub (view/QR/edit/late/cancel/score): `my.html`, `js/my.js`, `supabase/functions/my-entry/`, `supabase/functions/_shared/participant_auth.ts`.
+- Participant hub (view/2D code/edit/late/cancel/score): `my.html`, `js/my.js`, `supabase/functions/my-entry/`, `supabase/functions/_shared/participant_auth.ts`.
 - Score disclosure: my.html の成績セクション + `supabase/functions/disclose-result/`.
 - Shared Supabase access: `js/supabase_api.js`.
 

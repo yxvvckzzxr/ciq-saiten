@@ -9,7 +9,7 @@ type Role = 'owner' | 'admin' | 'scorer';
 const DESK_ROLES: Role[] = ['owner', 'admin', 'scorer'];
 // 受付番号を起点にする操作(手入力受付・取り消し)は運営限定。
 // 受付卓は scorer が担当することがあり、その端末は参加者に向いているため
-// (checkin.html は「参加者が画面にQRをかざす」前提のレイアウト)、
+// (checkin.html は「参加者が画面に二次元コードをかざす」前提のレイアウト)、
 // 番号だけで状態を書き換えられる経路をその端末に残さない。
 const STAFF_ONLY_ROLES: Role[] = ['owner', 'admin'];
 
@@ -55,7 +55,7 @@ function entryPayload(entry: Record<string, unknown>) {
 
 // 見つからない照会だけを IP 単位で制限する(受付番号の総当たり・列挙対策)。
 // 正常な受付はカウントしないので、当日の連続受付は制限にかからない。
-// (QR が全滅して全員を手入力で捌く事態でも詰まらないよう、成功側には制限を置かない)
+// (二次元コード が全滅して全員を手入力で捌く事態でも詰まらないよう、成功側には制限を置かない)
 async function findEntry(
   supabase: ReturnType<typeof createServiceClient>,
   req: Request,
@@ -105,18 +105,18 @@ Deno.serve(withCors(async (req) => {
       });
     }
 
-    // (a) QR 受付: 署名付きトークン(V7)のみ。素の entry UUID も受付番号も受け付けない。
+    // (a) 二次元コード 受付: 署名付きトークン(V7)のみ。素の entry UUID も受付番号も受け付けない。
     if (action === 'check') {
       const member = await requireProjectMember(supabase, req, projectId, DESK_ROLES);
 
       const scanned = qr ?? entryId; // entryId は後方互換の受け口(中身は署名付きトークン)
       if (scanned === undefined || scanned === null || String(scanned).length === 0) {
-        return jsonResponse({ error: 'QRコードが必要です。' }, 400);
+        return jsonResponse({ error: '二次元コードが必要です。' }, 400);
       }
       const verifiedId = await verifyQrToken(scanned);
       if (!verifiedId) {
         return jsonResponse({
-          error: 'このQRコードは使用できません。マイエントリーで最新のQRコードを表示するか、運営にお申し出ください。',
+          error: 'この二次元コードは使用できません。マイエントリーで最新の二次元コードを表示するか、運営にお申し出ください。',
         }, 400);
       }
 

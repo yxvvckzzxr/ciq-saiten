@@ -15,7 +15,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.min.js" integrity="sha384-fx4y4cDx8NYfissnVzdGJY3yVXWY3rn5ab5HTUjpvgT35oDiyAbjjqnLhnRmESNE" crossorigin="anonymous"></script>
     <script defer src="js/supabase_config.js?v=2"></script>
     <script defer src="js/supabase_client.js"></script>
-    <script defer src="js/supabase_api.js?v=36"></script>
+    <script defer src="js/supabase_api.js?v=37"></script>
     <script defer src="js/crypto.js"></script>
     <script defer src="js/icons.js?v=8"></script>
     <script defer src="js/ui.js?v=22"></script>
@@ -49,7 +49,7 @@
                 <!-- メール認証ステップ -->
                 <div id="email-verify-section">
                     <div class="page-msg info u-hidden" id="reentry-note" role="status">
-                        キャンセル済みの方も、通常と同じ手順で再エントリーできます。新しい受付番号・パスワード・QRコードが発行されます。
+                        キャンセル済みの方も、通常と同じ手順で再エントリーできます。新しい受付番号・パスワード・二次元コードが発行されます。
                     </div>
                     <div class="form-group">
                         <label class="required" for="f-email"><span data-icon="envelope" aria-hidden="true"></span> メールアドレス</label>
@@ -229,7 +229,7 @@
                 <span data-icon="envelope" aria-hidden="true"></span>
                 <div class="entry-mail-notice-content">
                     <strong>メールを保存してください</strong>
-                    <p>メールには当日受付用のQRコードとマイエントリー用のパスワードが含まれます。見つからない場合は迷惑メールフォルダも確認してください。</p>
+                    <p>メールには当日受付用の二次元コードとマイエントリー用のパスワードが含まれます。見つからない場合は迷惑メールフォルダも確認してください。</p>
                 </div>
             </div>
 
@@ -242,7 +242,7 @@
     <script defer src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit"></script>
     <script defer src="js/turnstile.js?v=2"></script>
     <script defer src="js/email.js?v=7"></script>
-    <script defer src="js/entry.js?v=18"></script>
+    <script defer src="js/entry.js?v=19"></script>
 </body>
 
 </html>

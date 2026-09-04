@@ -11,7 +11,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.min.js" integrity="sha384-fx4y4cDx8NYfissnVzdGJY3yVXWY3rn5ab5HTUjpvgT35oDiyAbjjqnLhnRmESNE" crossorigin="anonymous"></script>
     <script defer src="js/supabase_config.js?v=2"></script>
     <script defer src="js/supabase_client.js"></script>
-    <script defer src="js/supabase_api.js?v=36"></script>
+    <script defer src="js/supabase_api.js?v=37"></script>
     <script defer src="js/crypto.js"></script>
     <script defer src="js/icons.js?v=8"></script>
     <script defer src="js/ui.js?v=22"></script>
@@ -42,16 +42,16 @@
 
         <!-- ハブ本体 -->
         <div id="hub" class="u-hidden">
-            <!-- 受付番号 + QR(主役) -->
+            <!-- 受付番号 + 二次元コード(主役) -->
             <section class="page-card my-entry-card" aria-label="受付情報">
                 <div class="my-status-row" id="my-status" aria-live="polite"></div>
                 <div class="my-number-label">受付番号</div>
                 <div class="my-number" id="my-number">---</div>
                 <div class="my-qr" id="my-qr-wrap" hidden>
-                    <img id="my-qr" alt="当日受付用QRコード" width="200" height="200">
-                    <p class="my-qr-caption">当日受付でこのQRコードを提示してください。</p>
+                    <img id="my-qr" alt="当日受付用二次元コード" width="200" height="200">
+                    <p class="my-qr-caption">当日受付でこの二次元コードを提示してください。</p>
                     <button type="button" class="btn secondary" id="qr-download-btn">
-                        <span data-icon="download" aria-hidden="true"></span> QR画像を保存
+                        <span data-icon="download" aria-hidden="true"></span> 二次元コード画像を保存
                     </button>
                 </div>
             </section>
@@ -228,6 +228,6 @@
 
     <script defer src="js/email.js?v=7"></script>
     <script defer src="js/share_card.js?v=3"></script>
-    <script defer src="js/my.js?v=9"></script>
+    <script defer src="js/my.js?v=10"></script>
 </body>
 </html>

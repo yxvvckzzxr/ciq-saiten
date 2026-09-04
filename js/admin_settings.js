@@ -169,7 +169,7 @@
             });
             const receiptStatus = document.getElementById('admin-entry-receipt-status');
             if (receiptStatus) {
-                setPageMessage(receiptStatus, 'QRコード入り控え画像を生成しています...', 'info');
+                setPageMessage(receiptStatus, '二次元コード入り控え画像を生成しています...', 'info');
             }
             setAdminEntryStatus('');
             setAdminEntrySubmitting(false);
@@ -260,7 +260,7 @@
                 ...(receipt.status === 'waitlist' ? ['状態: キャンセル待ち'] : []),
                 `パスワード: ${receipt.password}`,
                 '',
-                '当日受付には、別途送付するQRコード画像が必要です。',
+                '当日受付には、別途送付する二次元コード画像が必要です。',
                 'この画像とパスワードは大会当日まで保管してください。',
                 '',
                 `マイエントリー(内容の確認・変更): ${receipt.myUrl}`,
@@ -314,7 +314,7 @@
                 };
                 image.onerror = () => {
                     URL.revokeObjectURL(url);
-                    reject(new Error('QRコード画像を読み込めませんでした。'));
+                    reject(new Error('二次元コード画像を読み込めませんでした。'));
                 };
                 image.src = url;
             });
@@ -387,7 +387,7 @@
             ctx.textAlign = 'center';
             ctx.fillStyle = '#1d1d1f';
             ctx.font = `800 24px ${appleTextFont}`;
-            ctx.fillText('当日受付にはこのQRコードが必要です', canvas.width / 2, 970);
+            ctx.fillText('当日受付にはこの二次元コードが必要です', canvas.width / 2, 970);
             ctx.fillStyle = '#6e6e73';
             ctx.font = `500 18px ${appleTextFont}`;
             ctx.fillText('この画像とパスワードを大会当日まで保管してください', canvas.width / 2, 1005);
@@ -425,9 +425,9 @@
                     image.src = lastAdminEntryReceiptUrl;
                     image.hidden = false;
                 }
-                setAdminEntryReceiptStatus('QRコード入り控え画像を生成しました。', 'success');
+                setAdminEntryReceiptStatus('二次元コード入り控え画像を生成しました。', 'success');
             } catch (e) {
-                setAdminEntryReceiptStatus(e.message || 'QRコード入り控え画像を生成できませんでした。', 'error');
+                setAdminEntryReceiptStatus(e.message || '二次元コード入り控え画像を生成できませんでした。', 'error');
             }
         }
 

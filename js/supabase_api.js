@@ -296,7 +296,7 @@ const CIQSupabaseAPI = {
 
     mapPublicEntry(row) {
         return {
-            // entry UUID は公開しない(V7: 受付QR偽造の材料になるため列権限で非公開)
+            // entry UUID は公開しない(V7: 受付二次元コード偽造の材料になるため列権限で非公開)
             entryNumber: row.entry_number,
             entryName: row.entry_name,
             affiliation: row.affiliation,
@@ -388,7 +388,7 @@ const CIQSupabaseAPI = {
 
     async getAdminEntryQrSvg(projectId, entryId) {
         const data = await this.invokeAuthedFunction('admin-entry-qr', { projectId, entryId });
-        if (!data?.ok || !data.svg) throw new Error(data?.error || 'QR code failed');
+        if (!data?.ok || !data.svg) throw new Error(data?.error || '二次元コードを生成できませんでした。');
         return data.svg;
     },
 
@@ -422,7 +422,7 @@ const CIQSupabaseAPI = {
         return data;
     },
 
-    // マイエントリー(my.html): 認証 + サマリー + QR + セッショントークン
+    // マイエントリー(my.html): 認証 + サマリー + 二次元コード + セッショントークン
     async myEntry(payload) {
         const data = await this.invokePublicFunction('my-entry', payload);
         if (!data?.ok) throw new Error(data?.error || 'My entry failed');
@@ -438,7 +438,7 @@ const CIQSupabaseAPI = {
         return data.stats;
     },
 
-    // QR(署名付きトークン)で受付する。素の entry UUID はサーバ側で拒否される(V7)。
+    // 二次元コード(署名付きトークン)で受付する。素の entry UUID はサーバ側で拒否される(V7)。
     async checkInEntry(projectId, qr) {
         const data = await this.invokeAuthedFunction('check-in', {
             action: 'check',
@@ -449,7 +449,7 @@ const CIQSupabaseAPI = {
         return data;
     },
 
-    // 受付番号で照会する(状態は変えない)。QRが読めないときの運用フォールバックの第一段階で、
+    // 受付番号で照会する(状態は変えない)。二次元コードが読めないときの運用フォールバックの第一段階で、
     // 運営が氏名・所属を目視確認するために使う。運営専用ページからのみ呼ぶ(サーバ側も owner/admin 限定)。
     async lookupEntryByNumber(projectId, entryNumber) {
         const data = await this.invokeAuthedFunction('check-in', {

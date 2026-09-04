@@ -12,7 +12,7 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.min.js" integrity="sha384-fx4y4cDx8NYfissnVzdGJY3yVXWY3rn5ab5HTUjpvgT35oDiyAbjjqnLhnRmESNE" crossorigin="anonymous"></script>
     <script defer src="js/supabase_config.js?v=2"></script>
     <script defer src="js/supabase_client.js"></script>
-    <script defer src="js/supabase_api.js?v=36"></script>
+    <script defer src="js/supabase_api.js?v=37"></script>
     <script defer src="js/crypto.js"></script>
     <script defer src="js/icons.js?v=8"></script>
     <script defer src="js/ui.js?v=22"></script>
@@ -40,7 +40,7 @@
         </div>
     </div>
 
-    <!-- 参加者が画面に向かってQRをかざす前提のレイアウト:
+    <!-- 参加者が画面に向かって二次元コードをかざす前提のレイアウト:
          左=大きなカメラ(かざす場所) / 右=大きな判定結果(参加者と担当者の両方が読む) -->
     <div class="main-content">
         <div class="left-col">
@@ -51,12 +51,12 @@
                     <div class="checkin-guide-frame"></div>
                 </div>
             </div>
-            <p id="scanning-text" role="status" aria-live="polite">QRコードを枠の中にかざしてください</p>
+            <p id="scanning-text" role="status" aria-live="polite">二次元コードを枠の中にかざしてください</p>
             <!-- 受付番号での手入力受付はこの画面には置かない。
-                 この画面は参加者がQRをかざすために覗き込む前提で、受付番号は公開情報のため、
+                 この画面は参加者が二次元コードをかざすために覗き込む前提で、受付番号は公開情報のため、
                  番号だけで受付状態を書き換えられる操作を参加者の目の前に残さない。
                  手入力は運営専用ページ(admin.html)に置いている。 -->
-            <p class="checkin-manual-note">QRが読めないときは運営にお申し出ください</p>
+            <p class="checkin-manual-note">二次元コードが読めないときは運営にお申し出ください</p>
         </div>
 
         <div class="right-col">
@@ -70,6 +70,6 @@
         </div>
     </div>
 
-    <script defer src="js/checkin.js?v=13"></script>
+    <script defer src="js/checkin.js?v=14"></script>
 </body>
 </html>
