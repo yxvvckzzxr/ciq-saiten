@@ -15,13 +15,13 @@
     <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.110.1/dist/umd/supabase.min.js" integrity="sha384-fx4y4cDx8NYfissnVzdGJY3yVXWY3rn5ab5HTUjpvgT35oDiyAbjjqnLhnRmESNE" crossorigin="anonymous"></script>
     <script defer src="js/supabase_config.js?v=2"></script>
     <script defer src="js/supabase_client.js"></script>
-    <script defer src="js/supabase_api.js?v=37"></script>
+    <script defer src="js/supabase_api.js?v=38"></script>
     <script defer src="js/crypto.js"></script>
     <script defer src="js/icons.js?v=8"></script>
     <script defer src="js/ui.js?v=22"></script>
     <script defer src="js/shared.js?v=2"></script>
     <link rel="stylesheet" href="css/design_system.css?v=77">
-    <link rel="stylesheet" href="css/pages.css?v=125">
+    <link rel="stylesheet" href="css/pages.css?v=126">
 </head>
 
 <body class="page-question">
@@ -32,6 +32,7 @@
         <div class="header-center">
             <div class="q-badge" id="q-badge" aria-label="問題番号">- 問</div>
             <div class="answer-badge" id="answer-badge" aria-label="模範解答">...</div>
+            <div class="answer-alts" id="answer-alts" aria-label="別解" hidden></div>
         </div>
         <div class="header-right">
             <div class="counter" id="progress-text" aria-live="polite" aria-label="採点済み枚数"></div>
@@ -57,7 +58,7 @@
 
 
 
-    <script defer src="js/question.js?v=43"></script>
+    <script defer src="js/question.js?v=44"></script>
 </body>
 
 </html>

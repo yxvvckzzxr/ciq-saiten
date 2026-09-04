@@ -79,6 +79,33 @@ async function navigateToNextScoringQuestion(options = {}) {
     return false;
 }
 
+// 模範解答の表示。別解は主答えの後ろに続けて出す。
+// 採点は M/X/H のキーボード操作が主なので、hover や click で隠すと
+// 「判断に迷った瞬間」に一番重い操作を要求することになる。常時見せる。
+function renderModelAnswer(model) {
+    const answer = model?.answer || '';
+    const alts = Array.isArray(model?.altAnswers) ? model.altAnswers : [];
+
+    document.getElementById('answer-badge').textContent = answer || '未設定';
+
+    const altsEl = document.getElementById('answer-alts');
+    if (!altsEl) return;
+    altsEl.textContent = '';
+    if (!alts.length) {
+        altsEl.hidden = true;
+        return;
+    }
+    // 「別解」というラベルは置かない。主答えとの差はサイズと濃度で示す。
+    // 区切りは項目と同じ要素に入れる。別要素にすると折り返しで行末に「/」だけが残る。
+    alts.forEach((alt, index) => {
+        const item = document.createElement('span');
+        item.className = 'answer-alt';
+        item.textContent = index === 0 ? alt : `/ ${alt}`;
+        altsEl.appendChild(item);
+    });
+    altsEl.hidden = false;
+}
+
 function preloadImageUrl(url) {
     if (!url) return Promise.resolve(false);
     return new Promise((resolve) => {
@@ -507,11 +534,11 @@ async function init() {
             return { value, ms: roundMs(performance.now() - started) };
         })();
         const [answerResult, cardsResult] = await Promise.all([answerTextPromise, cardsPromise]);
-        const answerText = answerResult.value;
+        const modelAnswer = answerResult.value;
         const cards = cardsResult.value;
         const dataMs = Math.max(answerResult.ms, cardsResult.ms);
 
-        document.getElementById('answer-badge').textContent = answerText || '未設定';
+        renderModelAnswer(modelAnswer);
         answerCards = cards;
         CIQSupabaseAPI.enqueueAnswerCellGeneration(projectId, answerCards.map(card => ({
             ...card,

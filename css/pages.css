@@ -247,6 +247,39 @@ body.page-wrapper {
   width: min(var(--container-wide), calc(100vw - var(--wide-gutter)));
 }
 
+/* 模範解答の別解。
+   「別解」というラベルは置かず、主答えとの差はサイズと濃度だけで示す。
+   採点は M/X/H のキーボード操作が主なので hover や click では隠さない
+   (迷った瞬間に一番重い操作を要求することになる)。
+   .fixed-header は position: sticky なので、別解が増えて縦に伸びても
+   グリッドが押し下がるだけで重なりは起きない。 */
+body.page-question .header-center {
+  flex-wrap: wrap;
+  row-gap: var(--sp-1);
+}
+
+.answer-alts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0 var(--sp-2);
+  min-width: 0;
+  font-size: var(--fs-13);
+  color: var(--ink-2);
+}
+
+/* 模範解答一覧の別解。セルは1行固定(.q-answer が nowrap + ellipsis)なので、
+   入りきらない分は省略される。全文は編集時に「/」区切りで開いて確認できる。 */
+.model-answer-alts {
+  color: var(--ink-3);
+}
+
+/* 要確認カードの別解。採点者の判断が割れた問題ほど別解が効く */
+.conflict-review-alts {
+  color: var(--ink-3);
+  font-weight: 400;
+}
+
 /* 中部枠の説明。チェックの意味(順位に効く)をその場で読ませる */
 .chubu-priority-note {
   margin-top: var(--sp-1);
