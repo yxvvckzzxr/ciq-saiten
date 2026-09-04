@@ -432,6 +432,8 @@ async function render() {
         fragment.appendChild(card);
     });
     grid.appendChild(fragment);
+    // 再描画の直前に取得が完了していたカードを拾う(プレースホルダの取り残し防止)。
+    updateVisibleConflictImages();
     scheduleBackgroundConflictImages(currentConflicts, initialImageLimit);
 
     scrollToSelectedConflict();
@@ -461,8 +463,10 @@ function createVoteDot(result) {
 
 function createConflictCard(conflict, idx) {
     const cacheKey = `${conflict.entryNumber}:q${conflict.q}`;
-    const hasTriedImage = Object.prototype.hasOwnProperty.call(cellUrlCache, cacheKey);
     const cellUrl = cellUrlCache[cacheKey];
+    // cellUrlCache の状態: undefined=未取得 / null=取得中 / ''=取得済みで画像なし / 文字列=URL。
+    // null を「取得済み」と数えると、取得中のカードに「画像がありません」と出てしまう。
+    const isResolved = typeof cellUrl === 'string';
     const modelAnswer = conflict.modelAnswer || modelAnswers[conflict.q] || '';
 
     const card = document.createElement('div');
@@ -485,9 +489,9 @@ function createConflictCard(conflict, idx) {
         const expired = document.createElement('div');
         expired.className = 'img-expired';
         const icon = createIcon('clock');
-        expired.append(icon, hasTriedImage ? ' 画像がありません' : ' 画像を読み込み中');
+        expired.append(icon, isResolved ? ' 画像がありません' : ' 画像を読み込み中');
         card.appendChild(expired);
-        if (!hasTriedImage && conflict.storagePath && (conflict.cellRegion || conflict.cellRegions?.[`q${conflict.q}`])) {
+        if (!isResolved && conflict.storagePath && (conflict.cellRegion || conflict.cellRegions?.[`q${conflict.q}`])) {
             observeConflictImage(card, conflict);
         }
     }
@@ -518,8 +522,16 @@ function createConflictCard(conflict, idx) {
 function scoreSelectedConflict(result) {
     const conflict = currentConflicts[selectedIndex];
     if (!conflict) return;
+    const card = document.querySelectorAll('.conflict-card')[selectedIndex];
+    if (card) {
+        card.classList.add('score-pop');
+        setTimeout(() => card.classList.remove('score-pop'), 150);
+    }
+    // 書き込みを待たずに選択を進める(question.js の scoreSelected と同じ)。
+    // 進めるのは setFinal より前。render() は「描画開始時点の選択」を復元するので、
+    // 後から進めると選択が判定済みのカードへ戻ってしまう。
+    advanceConflictSelection();
     setFinal(conflict.q, conflict.entryId, result)
-        .then(advanceConflictSelection)
         .catch(err => showToast(err.message, 'error'));
 }
 
@@ -559,7 +571,14 @@ function observeConflictImage(card, conflict) {
 
 function queueConflictImage(conflict) {
     const key = `${conflict.entryNumber}:q${conflict.q}`;
-    if (cellUrlCache[key] !== undefined) return;
+    const cached = cellUrlCache[key];
+    if (typeof cached === 'string') {
+        // 背景プリロードが先にキャッシュを埋めていることがある。ここで黙って返すと
+        // カードのプレースホルダが「画像を読み込み中」のまま残るため、その場で反映する。
+        updateVisibleConflictImages([{ key }]);
+        return;
+    }
+    if (cached === null) return; // 取得中。完了時に flush 側が反映する
     conflictImageQueue.set(key, {
         key,
         entryNumber: conflict.entryNumber,
@@ -586,14 +605,17 @@ async function flushConflictImages() {
     updateVisibleConflictImages(batch);
 }
 
+// requests を省略すると、いま画面にある全カードを対象に掃く。
+// 取得済みなのにプレースホルダのまま残っているカードを最後に拾うために使う。
 function updateVisibleConflictImages(requests) {
-    const requestKeys = new Set(requests.map(request => request.key));
+    const requestKeys = requests ? new Set(requests.map(request => request.key)) : null;
     document.querySelectorAll('.conflict-card').forEach((card) => {
         const conflict = card._ciqConflict;
         if (!conflict) return;
         const key = `${conflict.entryNumber}:q${conflict.q}`;
-        if (!requestKeys.has(key)) return;
+        if (requestKeys && !requestKeys.has(key)) return;
         const cellUrl = cellUrlCache[key];
+        if (typeof cellUrl !== 'string') return; // 未取得・取得中はプレースホルダのまま待つ
         const imageSlot = card.querySelector('.img-expired');
         if (!imageSlot) return;
         if (!cellUrl) {
@@ -667,14 +689,58 @@ function scheduleBackgroundConflictImages(conflicts, startIndex) {
         if (!batch.length) return;
 
         await ensureConflictCellUrls(batch);
+        // 背景取得でも必ずDOMへ反映する。ここを省くとキャッシュだけが埋まり、
+        // 後から交差監視が発火しても queueConflictImage が「取得済み」で弾くため、
+        // カードが「画像を読み込み中」のまま永久に残る。
+        await preloadImageUrls(batch.map(request => cellUrlCache[request.key]));
+        updateVisibleConflictImages(batch);
         if (offset < candidates.length) runWhenIdle(runNextBatch);
     };
 
     runWhenIdle(runNextBatch);
 }
 
+// question.js の mark() と同じ流れ: まず手元の状態を更新して即座に描画し、
+// そのあと書き込む。失敗したら元に戻して知らせる。
+// (以前は書き込み完了まで何も変わらず、そのうえ全件再取得していた)
+function applyLocalFinalResult(q, entryId, result) {
+    const questionNumber = Number(q);
+    if (serverConflictRows) {
+        const row = serverConflictRows.find(item => (
+            Number(item.q) === questionNumber && item.entryId === entryId
+        ));
+        if (!row) return () => {};
+        const previous = row.finalResult;
+        row.finalResult = result;
+        return () => { row.finalResult = previous; };
+    }
+
+    const index = finalResults.findIndex(item => (
+        Number(item.question_number) === questionNumber && item.entry_id === entryId
+    ));
+    if (index >= 0) {
+        const previous = finalResults[index];
+        finalResults[index] = { ...previous, result };
+        return () => { finalResults[index] = previous; };
+    }
+    finalResults.push({ question_number: questionNumber, entry_id: entryId, result });
+    return () => {
+        finalResults = finalResults.filter(item => !(
+            Number(item.question_number) === questionNumber && item.entry_id === entryId
+        ));
+    };
+}
+
 async function setFinal(q, entryId, result) {
-    await CIQSupabaseAPI.resolveScoreConflict(projectId, q, entryId, result);
+    const rollback = applyLocalFinalResult(q, entryId, result);
+    await render();
+    try {
+        await CIQSupabaseAPI.resolveScoreConflict(projectId, q, entryId, result);
+    } catch (error) {
+        rollback();
+        await render();
+        throw error;
+    }
     await refreshData();
 }
 
@@ -726,16 +792,10 @@ document.addEventListener('keydown', (e) => {
     const key = e.key;
     if (key === 'm' || key === 'M') {
         e.preventDefault();
-        const conflict = currentConflicts[selectedIndex];
-        if (conflict) {
-            setFinal(conflict.q, conflict.entryId, 'correct').then(advanceConflictSelection).catch(err => showToast(err.message, 'error'));
-        }
+        scoreSelectedConflict('correct');
     } else if (key === 'x' || key === 'X') {
         e.preventDefault();
-        const conflict = currentConflicts[selectedIndex];
-        if (conflict) {
-            setFinal(conflict.q, conflict.entryId, 'wrong').then(advanceConflictSelection).catch(err => showToast(err.message, 'error'));
-        }
+        scoreSelectedConflict('wrong');
     } else if (key === 'ArrowRight') {
         e.preventDefault();
         selectConflictCard(selectedIndex + 1, { focus: true });
